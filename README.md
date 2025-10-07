@@ -5,5 +5,5 @@ Contrary to popular belief, AM4 is not just an AMD chipset, its also a VM!
 See [INSTRUCTION_SET.md].
 
 ## Contributors
-Hugo Lindström \\
+Hugo Lindström \
 William Olsson (soon)
