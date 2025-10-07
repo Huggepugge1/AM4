@@ -1,4 +1,6 @@
 # Instruction Set of AM4
+Each instruction consists of an OPCODE and an optional argument.
+
 ## Definitions
 ### OPCODE
 8 bit number representing the current instruction
