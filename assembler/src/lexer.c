@@ -1,33 +1,75 @@
-#include "lexer.h"
-#include "arguments.h"
-#include "value.h"
-
+#include <ctype.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "arguments.h"
+#include "lexer.h"
+#include "value.h"
+
 bool char_is_white_space(char c) { return c == ' ' || c == '\n' || c == '\t'; }
 
-void lex_string(char *str, struct TokenVec *vec);
+bool is_int(char *str) {
+    while (*str) {
+        if (!isdigit(*str++)) {
+            return false;
+        }
+    }
+    return true;
+}
 
-struct Token token_get(char *string) {
-    if (strcmp(string, "noop") == 0) {
-        struct Token token = {.kind = TokenNoop, .value = {.kind = None}};
+void lex_string(char *str, size_t line, struct TokenVec *vec);
+
+struct Token token_get(char *str, size_t line, size_t col) {
+    line += 1;
+    col += 1;
+    if (strcmp(str, "noop") == 0) {
+        struct Token token = {.kind = TokenNoop,
+                              .line = line,
+                              .col = col,
+                              .value = {.kind = None}};
         return token;
     }
-    if (strcmp(string, "\n") == 0) {
-        struct Token token = {.kind = TokenNewLine, .value = {.kind = None}};
+    if (strcmp(str, "push") == 0) {
+        struct Token token = {.kind = TokenPush,
+                              .line = line,
+                              .col = col,
+                              .value = {.kind = None}};
         return token;
     }
-    fprintf(stderr, "Could not parse token `%s`\n", string);
+    if (is_int(str)) {
+        uint64_t int_value = atoi(str);
+        struct Token token = {
+            .kind = TokenInt,
+            .line = line,
+            .col = col,
+            .value = {.kind = IntValue, .value = {.integer = int_value}}};
+        return token;
+    }
+    if (strcmp(str, "\n") == 0) {
+        struct Token token = {.kind = TokenNewLine,
+                              .line = line,
+                              .col = col,
+                              .value = {.kind = None}};
+        return token;
+    }
+    fprintf(stderr, "%zu:%zu : Could not parse token `%s`\n", line + 1, col + 1,
+            str);
     exit(1);
 }
 
 void token_kind_to_string(struct Token *token,
                           __attribute__((unused)) char **str) {
     switch (token->kind) {
+    case TokenPush:
+        *str = "push";
+        return;
     case TokenNoop:
         *str = "noop";
+        return;
+    case TokenInt:
+        *str = "int";
         return;
     case TokenNewLine:
         *str = "\\n";
@@ -51,34 +93,42 @@ struct TokenVec *lex(char *filename) {
     FILE *fptr;
     fptr = fopen(filename, "r");
     char file_contents[65535];
+    size_t line = 0;
     while (fgets(file_contents, 65535, fptr)) {
-        lex_string(file_contents, vec);
+        lex_string(file_contents, line, vec);
+        line++;
     }
+
+    fclose(fptr);
 
     return vec;
 }
 
-void lex_string(char *str, struct TokenVec *vec) {
+void lex_string(char *str, size_t line, struct TokenVec *vec) {
     char current_string[256] = {0};
     size_t pos = 0;
+    size_t col = 0;
 
     while (*str) {
         while (*str && !char_is_white_space(*str)) {
             current_string[pos++] = *str++;
             if (pos > 254) {
-                fprintf(stderr,
-                        "Found a token more than 254 characters long\n");
+                fprintf(
+                    stderr,
+                    "%zu:%zu : Found a token more than 254 characters long\n",
+                    line + 1, col + 1);
                 exit(1);
             }
         }
         if (strlen(current_string) > 0) {
-            token_vec_push(vec, token_get(current_string));
+            token_vec_push(vec, token_get(current_string, line, col));
         }
         if (*str == '\n') {
-            token_vec_push(vec, token_get("\n"));
+            token_vec_push(vec, token_get("\n", line, col));
         }
         memset(current_string, 0, 256);
         pos = 0;
+        col = pos;
         str++;
     }
 }

@@ -1,7 +1,7 @@
 #pragma once
 
 struct Value {
-    enum Kind { None, Int } kind;
+    enum Kind { None, IntValue } kind;
     union value {
         int integer;
     } value;

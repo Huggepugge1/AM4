@@ -1,5 +1,3 @@
-#include <stdio.h>
-
 #include "value.h"
 
 void value_to_string(struct Value *value, char **str) {
@@ -7,8 +5,8 @@ void value_to_string(struct Value *value, char **str) {
     case None:
         *str = "none";
         return;
-    case Int:
-        sprintf(*str, "%d", value->value.integer);
+    case IntValue:
+        *str = "int";
         return;
     }
 }

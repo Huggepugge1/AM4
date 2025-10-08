@@ -5,10 +5,14 @@
 #include "lexer.h"
 #include "value.h"
 
+enum InstructionKind {
+    InstructionPush = 0x10,
+
+    InstructionNoop = 0x00,
+};
+
 struct Instruction {
-    enum InstructionKind {
-        InstructionNoop,
-    } kind;
+    enum InstructionKind kind;
     struct Value value;
 };
 

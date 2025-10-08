@@ -1,1 +1,1 @@
-push 1
+noop

@@ -9,7 +9,29 @@ bool expect(enum TokenKind token_kind, struct TokenVec *token_vec, size_t i) {
 }
 
 struct Instruction parse_instruction(struct TokenVec *token_vec, size_t *i) {
-    if (token_vec->elements[*i].kind == TokenNoop) {
+    struct Token token = token_vec->elements[*i];
+    if (token.kind == TokenPush) {
+        if (expect(TokenInt, token_vec, *i + 1)) {
+            if (expect(TokenNewLine, token_vec, *i + 2)) {
+                struct Token int_token = token_vec->elements[*i + 1];
+                *i += 3;
+                struct Instruction instruction = {
+                    .kind = InstructionPush,
+                    .value = {.kind = IntValue,
+                              .value = int_token.value.value}};
+                return instruction;
+            } else {
+                fprintf(stderr, "%zu:%zu `push` not followed by a int\n",
+                        token.line, token.col);
+                exit(1);
+            }
+        } else {
+            fprintf(stderr, "%zu:%zu : `push int`  not followed by a newline\n",
+                    token.line, token.col);
+            exit(1);
+        }
+    }
+    if (token.kind == TokenNoop) {
         if (expect(TokenNewLine, token_vec, *i + 1)) {
             *i += 2;
             struct Instruction instruction = {.kind = InstructionNoop,
@@ -17,7 +39,8 @@ struct Instruction parse_instruction(struct TokenVec *token_vec, size_t *i) {
             return instruction;
         }
 
-        fprintf(stderr, "Noop not followed by a newline\n");
+        fprintf(stderr, "%zu:%zu : `noop` not followed by a newline\n",
+                token.line, token.col);
         exit(1);
     }
 
@@ -48,13 +71,15 @@ void instruction_vec_print(struct InstructionVec *vec);
 void instruction_kind_to_string(struct Instruction *instruction,
                                 __attribute__((unused)) char **str) {
     switch (instruction->kind) {
+    case InstructionPush:
+        *str = "push";
+        return;
     case InstructionNoop:
         *str = "noop";
         return;
-        fprintf(stderr,
-                "Unreachable statement reached in token_kind_to_string\n");
-        exit(1);
     }
+    fprintf(stderr, "Unreachable statement reached in token_kind_to_string\n");
+    exit(1);
 }
 
 void instruction_to_string(struct Instruction *instruction, char (*str)[256]) {

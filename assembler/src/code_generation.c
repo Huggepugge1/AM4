@@ -19,9 +19,16 @@ struct Code generate_code(struct InstructionVec *instructions) {
     for (size_t i = 0; i < instructions->len; i++) {
         struct Instruction instruction = instructions->elements[i];
         switch (instruction.kind) {
-        case InstructionNoop:
-            code.bin[code.len] = 0x00000000;
+        case InstructionPush: {
+            uint32_t int_value = instruction.value.value.integer;
+            code.bin[code.len] = instruction.kind << 24 | int_value;
             code.len++;
+            break;
+        }
+        case InstructionNoop:
+            code.bin[code.len] = instruction.kind << 24;
+            code.len++;
+            break;
         }
     }
     return code;
@@ -32,4 +39,6 @@ void generate_code_and_write_to_file(struct InstructionVec *instructions,
     struct Code code = generate_code(instructions);
     FILE *output = fopen(output_file, "w");
     fwrite(code.bin, sizeof(uint32_t), code.len, output);
+    fclose(output);
+    free(code.bin);
 }

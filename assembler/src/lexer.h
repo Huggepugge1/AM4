@@ -6,14 +6,19 @@
 #include <stddef.h>
 
 enum TokenKind {
+    TokenPush,
+
     TokenNoop,
+
+    TokenInt,
 
     TokenNewLine,
 };
 
 struct Token {
     enum TokenKind kind;
-    bool has_value;
+    size_t line;
+    size_t col;
     struct Value value;
 };
 
