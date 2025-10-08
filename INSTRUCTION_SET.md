@@ -48,14 +48,23 @@ Instruction address. 24 bit number.
 ### Eq
 0xa0
 
-### LE
+### LT
 0xa1
 
-### AND
+### LE
 0xa2
 
-### NEG
+### GT
+0xa3
+
+### GE
+0xa4
+
+### AND
 0xaa
+
+### NEG
+0xb0
 
 ## Memory
 ### Fetch
