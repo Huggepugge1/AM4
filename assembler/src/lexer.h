@@ -47,15 +47,15 @@ struct TokenVec *lex(char *filename);
 struct TokenVec *token_vec_new();
 
 /**
- * Push a Token onto a TokenVec
+ * Push a token onto a TokenVec
  *
- * @param vec
- * @param token
+ * @param TokenVec vec
+ * @param Token token
  */
 void token_vec_push(struct TokenVec *vec, struct Token token);
 
 /**
- * Destroy a TokenVec
+ * Free a TokenVec
  *
  * @param vec
  */
