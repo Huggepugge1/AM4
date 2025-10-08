@@ -19,8 +19,9 @@ struct Code generate_code(struct InstructionVec *instructions) {
     for (size_t i = 0; i < instructions->len; i++) {
         struct Instruction instruction = instructions->elements[i];
 
-        // This is actually fine - Source trust me bro
-        int32_t value = instruction.value.value.integer;
+        // We don't care what type value is, only that it is
+        // at most 24 bits long so it does not corrupt our OPCODE
+        int32_t value = instruction.value.value.integer & 0xFFFFFF;
         code.bin[code.len] = instruction.kind << 24 | value;
         code.len++;
     }
