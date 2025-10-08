@@ -1,7 +1,29 @@
 #include <stdio.h>
+#include <stdlib.h>
 
-int main() {
-  printf("Hello World again\n");
+#include "arguments.h"
+#include "code_generation.h"
+#include "lexer.h"
+#include "parser.h"
 
-  return 0;
+int main(int argc, char **argv) {
+    struct Arguments args = arguments_parse(argc, argv);
+    arguments_print(args);
+    if (args.input == NULL) {
+        fprintf(stderr, "am4asm needs a filename. See `--help` for more info");
+        exit(1);
+    }
+
+    struct TokenVec *tokens = lex(args.input);
+    token_vec_print(tokens);
+
+    struct InstructionVec *instructions = parse(tokens);
+    instruction_vec_print(instructions);
+
+    generate_code_and_write_to_file(instructions, args.output);
+
+    token_vec_destroy(tokens);
+    instruction_vec_destroy(instructions);
+
+    return 0;
 }
