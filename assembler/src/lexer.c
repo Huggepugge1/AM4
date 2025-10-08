@@ -143,6 +143,10 @@ void lex_string(char *str, size_t line, struct TokenVec *vec) {
 
     while (*str) {
         while (*str && !char_is_white_space(*str)) {
+            if (pos > 0 && *str == '/' && current_string[pos - 1] == '/') {
+                token_vec_push(vec, token_get("\n", line, strlen(str)));
+                return;
+            }
             current_string[pos++] = *str++;
             if (pos > 254) {
                 fprintf(
