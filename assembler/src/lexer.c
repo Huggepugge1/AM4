@@ -1,4 +1,5 @@
 #include <ctype.h>
+#include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,6 +23,7 @@ bool is_int(char *str) {
 void lex_string(char *str, size_t line, struct TokenVec *vec);
 
 struct Token token_get(char *str, size_t line, size_t col) {
+    // Line has to be one indexed
     line += 1;
     col += 1;
     if (strcmp(str, "noop") == 0) {
@@ -46,12 +48,18 @@ struct Token token_get(char *str, size_t line, size_t col) {
         return token;
     }
     if (is_int(str)) {
-        uint64_t int_value = atoi(str);
+        int32_t int_value = strtol(str, NULL, 10);
         struct Token token = {
             .kind = TokenInt,
             .line = line,
             .col = col,
             .value = {.kind = IntValue, .value = {.integer = int_value}}};
+        if (int_value > pow(2, 23) - 1) {
+            fprintf(stderr,
+                    "warning(%zu:%zd): `%d` cannot fit within 24 bits and will "
+                    "be truncated\n",
+                    line, col, int_value);
+        }
         return token;
     }
     if (strcmp(str, "\n") == 0) {
@@ -61,8 +69,8 @@ struct Token token_get(char *str, size_t line, size_t col) {
                               .value = {.kind = None}};
         return token;
     }
-    fprintf(stderr, "%zu:%zu : Could not parse token `%s`\n", line + 1, col + 1,
-            str);
+    fprintf(stderr, "error(%zu:%zu): Could not parse token `%s`\n", line + 1,
+            col + 1, str);
     exit(1);
 }
 
@@ -125,10 +133,10 @@ void lex_string(char *str, size_t line, struct TokenVec *vec) {
         while (*str && !char_is_white_space(*str)) {
             current_string[pos++] = *str++;
             if (pos > 254) {
-                fprintf(
-                    stderr,
-                    "%zu:%zu : Found a token more than 254 characters long\n",
-                    line + 1, col + 1);
+                fprintf(stderr,
+                        "error(%zu:%zu): Found a token more than 254 "
+                        "characters long\n",
+                        line + 1, col + 1);
                 exit(1);
             }
         }
