@@ -13,14 +13,16 @@ OBJECTS = $(addprefix bin/obj/, \
 
 LIBS =
 
-%.o: | bin/obj/
+TARGET_NAME = bin/am4asm
+
+bin/obj/%.o: src/%.c | bin/obj/
 	$(CC) $(COPTS) $(OBJECT_FLAG) -o $@ src/$(basename $(notdir $@)).c $(LIBS)
 
-bin/am4: $(OBJECTS) src/main.c | bin/obj/
+$(TARGET_NAME): $(OBJECTS) src/main.c | bin/obj/
 	$(CC) $(COPTS) -o $@ $^
 
-run: bin/am4
-	./bin/am4
+run: $(TARGET_NAME)
+	$(TARGET_NAME)
 
 clean:
 	rm -r bin
