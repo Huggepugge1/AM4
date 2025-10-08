@@ -47,6 +47,52 @@ struct Token token_get(char *str, size_t line, size_t col) {
                               .value = {.kind = None}};
         return token;
     }
+    if (strcmp(str, "eq") == 0) {
+        struct Token token = {
+            .kind = TokenEq, .line = line, .col = col, .value = {.kind = None}};
+        return token;
+    }
+    if (strcmp(str, "lt") == 0) {
+        struct Token token = {
+            .kind = TokenLt, .line = line, .col = col, .value = {.kind = None}};
+        return token;
+    }
+    if (strcmp(str, "le") == 0) {
+        struct Token token = {
+            .kind = TokenLe, .line = line, .col = col, .value = {.kind = None}};
+        return token;
+    }
+    if (strcmp(str, "gt") == 0) {
+        struct Token token = {
+            .kind = TokenGt, .line = line, .col = col, .value = {.kind = None}};
+        return token;
+    }
+    if (strcmp(str, "ge") == 0) {
+        struct Token token = {
+            .kind = TokenGe, .line = line, .col = col, .value = {.kind = None}};
+        return token;
+    }
+    if (strcmp(str, "land") == 0) {
+        struct Token token = {.kind = TokenLAnd,
+                              .line = line,
+                              .col = col,
+                              .value = {.kind = None}};
+        return token;
+    }
+    if (strcmp(str, "lor") == 0) {
+        struct Token token = {.kind = TokenLOr,
+                              .line = line,
+                              .col = col,
+                              .value = {.kind = None}};
+        return token;
+    }
+    if (strcmp(str, "lneg") == 0) {
+        struct Token token = {.kind = TokenLNeg,
+                              .line = line,
+                              .col = col,
+                              .value = {.kind = None}};
+        return token;
+    }
     if (is_int(str)) {
         int32_t int_value = strtol(str, NULL, 10);
         struct Token token = {
@@ -60,6 +106,22 @@ struct Token token_get(char *str, size_t line, size_t col) {
                     "be truncated\n",
                     line, col, int_value);
         }
+        return token;
+    }
+    if (strcmp(str, "false") == 0) {
+        struct Token token = {
+            .kind = TokenBool,
+            .line = line,
+            .col = col,
+            .value = {.kind = BoolValue, .value = {.boolean = false}}};
+        return token;
+    }
+    if (strcmp(str, "true") == 0) {
+        struct Token token = {
+            .kind = TokenBool,
+            .line = line,
+            .col = col,
+            .value = {.kind = BoolValue, .value = {.boolean = true}}};
         return token;
     }
     if (strcmp(str, "\n") == 0) {
@@ -85,11 +147,40 @@ void token_kind_to_string(struct Token *token,
         *str = "add";
         return;
 
+    case TokenEq:
+        *str = "eq";
+        return;
+    case TokenLt:
+        *str = "lt";
+        return;
+    case TokenLe:
+        *str = "le";
+        return;
+    case TokenGt:
+        *str = "gt";
+        return;
+    case TokenGe:
+        *str = "ge";
+        return;
+
+    case TokenLAnd:
+        *str = "land";
+        return;
+    case TokenLOr:
+        *str = "lor";
+        return;
+    case TokenLNeg:
+        *str = "lneg";
+        return;
+
     case TokenNoop:
         *str = "noop";
         return;
     case TokenInt:
         *str = "int";
+        return;
+    case TokenBool:
+        *str = "bool";
         return;
     case TokenNewLine:
         *str = "\\n";

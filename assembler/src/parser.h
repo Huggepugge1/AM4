@@ -10,6 +10,17 @@ enum InstructionKind {
 
     InstructionAdd = 0x20,
 
+    InstructionEq = 0xa0,
+    InstructionLt = 0xa1,
+    InstructionLe = 0xa2,
+    InstructionGt = 0xa3,
+    InstructionGe = 0xa4,
+
+    InstructionLAnd = 0xaa,
+    InstructionLOr = 0xab,
+
+    InstructionLNeg = 0xb0,
+
     InstructionNoop = 0x00,
 };
 
