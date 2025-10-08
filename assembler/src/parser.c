@@ -46,7 +46,7 @@ struct Instruction parse_instruction(struct TokenVec *token_vec, size_t *i) {
         exit(1);
     }
     if (token.kind == TokenSub) {
-        if (expect(TokenNewLine, token_vec, *i + 1)) {
+        if (expect(TokenNewLine, &token_vec->elements[*i + 1])) {
             *i += 2;
             struct Instruction instruction = {.kind = InstructionSub,
                                               .value = {.kind = None}};
@@ -58,7 +58,7 @@ struct Instruction parse_instruction(struct TokenVec *token_vec, size_t *i) {
         exit(1);
     }
     if (token.kind == TokenMul) {
-        if (expect(TokenNewLine, token_vec, *i + 1)) {
+        if (expect(TokenNewLine, &token_vec->elements[*i + 1])) {
             *i += 2;
             struct Instruction instruction = {.kind = InstructionMul,
                                               .value = {.kind = None}};
