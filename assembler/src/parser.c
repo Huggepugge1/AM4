@@ -4,15 +4,15 @@
 #include "lexer.h"
 #include "parser.h"
 
-bool expect(enum TokenKind token_kind, struct TokenVec *token_vec, size_t i) {
-    return token_vec->elements[i].kind == token_kind;
+bool expect(enum TokenKind token_kind, struct Token *token) {
+    return token->kind == token_kind;
 }
 
 struct Instruction parse_instruction(struct TokenVec *token_vec, size_t *i) {
     struct Token token = token_vec->elements[*i];
     if (token.kind == TokenPush) {
-        if (expect(TokenInt, token_vec, *i + 1)) {
-            if (expect(TokenNewLine, token_vec, *i + 2)) {
+        if (expect(TokenInt, &token_vec->elements[*i + 1])) {
+            if (expect(TokenNewLine, &token_vec->elements[*i + 2])) {
                 struct Token int_token = token_vec->elements[*i + 1];
                 *i += 3;
                 struct Instruction instruction = {
@@ -21,37 +21,39 @@ struct Instruction parse_instruction(struct TokenVec *token_vec, size_t *i) {
                               .value = int_token.value.value}};
                 return instruction;
             } else {
-                fprintf(stderr, "%zu:%zu `push` not followed by a int\n",
+                fprintf(stderr,
+                        "error(%zu:%zu): `push` not followed by a int\n",
                         token.line, token.col);
                 exit(1);
             }
         } else {
-            fprintf(stderr, "%zu:%zu : `push int`  not followed by a newline\n",
+            fprintf(stderr,
+                    "error(%zu:%zu): `push int`  not followed by a newline\n",
                     token.line, token.col);
             exit(1);
         }
     }
     if (token.kind == TokenAdd) {
-        if (expect(TokenNewLine, token_vec, *i + 1)) {
+        if (expect(TokenNewLine, &token_vec->elements[*i + 1])) {
             *i += 2;
             struct Instruction instruction = {.kind = InstructionAdd,
                                               .value = {.kind = None}};
             return instruction;
         }
 
-        fprintf(stderr, "%zu:%zu : `add` not followed by a newline\n",
+        fprintf(stderr, "error(%zu:%zu): `add` not followed by a newline\n",
                 token.line, token.col);
         exit(1);
     }
     if (token.kind == TokenNoop) {
-        if (expect(TokenNewLine, token_vec, *i + 1)) {
+        if (expect(TokenNewLine, &token_vec->elements[*i + 1])) {
             *i += 2;
             struct Instruction instruction = {.kind = InstructionNoop,
                                               .value = {.kind = None}};
             return instruction;
         }
 
-        fprintf(stderr, "%zu:%zu : `noop` not followed by a newline\n",
+        fprintf(stderr, "error(%zu:%zu): `noop` not followed by a newline\n",
                 token.line, token.col);
         exit(1);
     }
