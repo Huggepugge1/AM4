@@ -9,6 +9,8 @@ enum InstructionKind {
     InstructionPush = 0x10,
 
     InstructionAdd = 0x20,
+    InstructionSub = 0x21,
+    InstructionMul = 0x22,
 
     InstructionNoop = 0x00,
 };
