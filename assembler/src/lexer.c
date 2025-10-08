@@ -38,6 +38,13 @@ struct Token token_get(char *str, size_t line, size_t col) {
                               .value = {.kind = None}};
         return token;
     }
+    if (strcmp(str, "add") == 0) {
+        struct Token token = {.kind = TokenAdd,
+                              .line = line,
+                              .col = col,
+                              .value = {.kind = None}};
+        return token;
+    }
     if (is_int(str)) {
         uint64_t int_value = atoi(str);
         struct Token token = {
@@ -65,6 +72,11 @@ void token_kind_to_string(struct Token *token,
     case TokenPush:
         *str = "push";
         return;
+
+    case TokenAdd:
+        *str = "add";
+        return;
+
     case TokenNoop:
         *str = "noop";
         return;

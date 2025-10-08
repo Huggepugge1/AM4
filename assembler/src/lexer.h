@@ -8,6 +8,8 @@
 enum TokenKind {
     TokenPush,
 
+    TokenAdd,
+
     TokenNoop,
 
     TokenInt,

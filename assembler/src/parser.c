@@ -31,6 +31,18 @@ struct Instruction parse_instruction(struct TokenVec *token_vec, size_t *i) {
             exit(1);
         }
     }
+    if (token.kind == TokenAdd) {
+        if (expect(TokenNewLine, token_vec, *i + 1)) {
+            *i += 2;
+            struct Instruction instruction = {.kind = InstructionAdd,
+                                              .value = {.kind = None}};
+            return instruction;
+        }
+
+        fprintf(stderr, "%zu:%zu : `add` not followed by a newline\n",
+                token.line, token.col);
+        exit(1);
+    }
     if (token.kind == TokenNoop) {
         if (expect(TokenNewLine, token_vec, *i + 1)) {
             *i += 2;
@@ -73,6 +85,9 @@ void instruction_kind_to_string(struct Instruction *instruction,
     switch (instruction->kind) {
     case InstructionPush:
         *str = "push";
+        return;
+    case InstructionAdd:
+        *str = "add";
         return;
     case InstructionNoop:
         *str = "noop";

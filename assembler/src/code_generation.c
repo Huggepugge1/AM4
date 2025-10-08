@@ -18,18 +18,11 @@ struct Code generate_code(struct InstructionVec *instructions) {
     };
     for (size_t i = 0; i < instructions->len; i++) {
         struct Instruction instruction = instructions->elements[i];
-        switch (instruction.kind) {
-        case InstructionPush: {
-            uint32_t int_value = instruction.value.value.integer;
-            code.bin[code.len] = instruction.kind << 24 | int_value;
-            code.len++;
-            break;
-        }
-        case InstructionNoop:
-            code.bin[code.len] = instruction.kind << 24;
-            code.len++;
-            break;
-        }
+
+        // This is actually fine - Source trust me bro
+        int32_t value = instruction.value.value.integer;
+        code.bin[code.len] = instruction.kind << 24 | value;
+        code.len++;
     }
     return code;
 }
