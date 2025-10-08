@@ -6,4 +6,4 @@ See [INSTRUCTION_SET.md](INSTRUCTION_SET.md).
 
 ## Contributors
 Hugo Lindström \
-William Olsson (soon)
+William Olsson
