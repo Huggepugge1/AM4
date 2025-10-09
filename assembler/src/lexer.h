@@ -12,9 +12,20 @@ enum TokenKind {
     TokenSub,
     TokenMul,
 
+    TokenEq,
+    TokenLt,
+    TokenLe,
+    TokenGt,
+    TokenGe,
+
+    TokenLAnd,
+    TokenLOr,
+    TokenLNeg,
+
     TokenNoop,
 
     TokenInt,
+    TokenBool,
 
     TokenNewLine,
 };
@@ -40,6 +51,22 @@ struct TokenVec {
  * @returns All the tokens in a TokenVec
  */
 struct TokenVec *lex(char *filename);
+
+/**
+ * Get the string representation of a TokenKind
+ *
+ * @param struct Token *token
+ * @param char *str
+ */
+void token_kind_to_string(struct Token *token, char **str);
+
+/**
+ * Get the string representation of a token
+ *
+ * @param struct Token *token
+ * @param char *str
+ */
+void token_to_string(struct Token *token, char *str);
 
 /**
  * Create a new TokenVec

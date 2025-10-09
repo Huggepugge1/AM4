@@ -8,5 +8,8 @@ void value_to_string(struct Value *value, char **str) {
     case IntValue:
         *str = "int";
         return;
+    case BoolValue:
+        *str = "bool";
+        return;
     }
 }

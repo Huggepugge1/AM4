@@ -1,11 +1,13 @@
 #pragma once
 
+#include <stdbool.h>
 #include <stdint.h>
 
 struct Value {
-    enum Kind { None, IntValue } kind;
+    enum Kind { None, IntValue, BoolValue } kind;
     union value {
         int32_t integer;
+        bool boolean;
     } value;
 };
 
