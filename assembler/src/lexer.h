@@ -9,6 +9,8 @@ enum TokenKind {
     TokenPush,
 
     TokenAdd,
+    TokenSub,
+    TokenMul,
 
     TokenNoop,
 
