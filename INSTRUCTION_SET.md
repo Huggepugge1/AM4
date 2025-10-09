@@ -63,6 +63,9 @@ Instruction address. 24 bit number.
 ### AND
 0xaa
 
+### OR
+0xab
+
 ### NEG
 0xb0
 

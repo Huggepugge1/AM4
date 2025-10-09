@@ -91,8 +91,8 @@ struct Token token_get(char *str, size_t line, size_t col) {
                               .line = line,
                               .col = col,
                               .value = {.kind = None}};
+		return token;
     }
-
     if (strcmp(str, "lor") == 0) {
         struct Token token = {.kind = TokenLOr,
                               .line = line,
