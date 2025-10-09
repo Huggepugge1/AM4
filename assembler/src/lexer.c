@@ -47,6 +47,20 @@ struct Token token_get(char *str, size_t line, size_t col) {
                               .value = {.kind = None}};
         return token;
     }
+    if (strcmp(str, "sub") == 0) {
+        struct Token token = {.kind = TokenSub,
+                              .line = line,
+                              .col = col,
+                              .value = {.kind = None}};
+        return token;
+    }
+    if (strcmp(str, "mul") == 0) {
+        struct Token token = {.kind = TokenMul,
+                              .line = line,
+                              .col = col,
+                              .value = {.kind = None}};
+        return token;
+    }
     if (strcmp(str, "eq") == 0) {
         struct Token token = {
             .kind = TokenEq, .line = line, .col = col, .value = {.kind = None}};
@@ -77,8 +91,8 @@ struct Token token_get(char *str, size_t line, size_t col) {
                               .line = line,
                               .col = col,
                               .value = {.kind = None}};
-        return token;
     }
+
     if (strcmp(str, "lor") == 0) {
         struct Token token = {.kind = TokenLOr,
                               .line = line,
@@ -145,6 +159,12 @@ void token_kind_to_string(struct Token *token,
 
     case TokenAdd:
         *str = "add";
+        return;
+    case TokenSub:
+        *str = "sub";
+        return;
+    case TokenMul:
+        *str = "mul";
         return;
 
     case TokenEq:
@@ -222,6 +242,10 @@ void lex_string(char *str, size_t line, struct TokenVec *vec) {
 
     while (*str) {
         while (*str && !char_is_white_space(*str)) {
+            if (pos > 0 && *str == '/' && current_string[pos - 1] == '/') {
+                token_vec_push(vec, token_get("\n", line, strlen(str)));
+                return;
+            }
             current_string[pos++] = *str++;
             if (pos > 254) {
                 fprintf(stderr,
