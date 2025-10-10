@@ -12,6 +12,9 @@
 bool char_is_white_space(char c) { return c == ' ' || c == '\n' || c == '\t'; }
 
 bool is_int(char *str) {
+    if (*str == '-') {
+        str++;
+    }
     while (*str) {
         if (!isdigit(*str++)) {
             return false;
@@ -26,95 +29,70 @@ struct Token token_get(char *str, size_t line, size_t col) {
     // Line has to be one indexed
     line += 1;
     col += 1;
+    struct Token token = {.line = line, .col = col, .value = {.kind = None}};
     if (strcmp(str, "noop") == 0) {
-        struct Token token = {.kind = TokenNoop,
-                              .line = line,
-                              .col = col,
-                              .value = {.kind = None}};
+        token.kind = TokenNoop;
         return token;
     }
+
     if (strcmp(str, "push") == 0) {
-        struct Token token = {.kind = TokenPush,
-                              .line = line,
-                              .col = col,
-                              .value = {.kind = None}};
+        token.kind = TokenPush;
         return token;
     }
+
     if (strcmp(str, "add") == 0) {
-        struct Token token = {.kind = TokenAdd,
-                              .line = line,
-                              .col = col,
-                              .value = {.kind = None}};
+        token.kind = TokenAdd;
         return token;
     }
     if (strcmp(str, "sub") == 0) {
-        struct Token token = {.kind = TokenSub,
-                              .line = line,
-                              .col = col,
-                              .value = {.kind = None}};
+        token.kind = TokenSub;
         return token;
     }
     if (strcmp(str, "mul") == 0) {
-        struct Token token = {.kind = TokenMul,
-                              .line = line,
-                              .col = col,
-                              .value = {.kind = None}};
+        token.kind = TokenMul;
         return token;
     }
+
     if (strcmp(str, "eq") == 0) {
-        struct Token token = {
-            .kind = TokenEq, .line = line, .col = col, .value = {.kind = None}};
+        token.kind = TokenEq;
         return token;
     }
     if (strcmp(str, "lt") == 0) {
-        struct Token token = {
-            .kind = TokenLt, .line = line, .col = col, .value = {.kind = None}};
+        token.kind = TokenLt;
         return token;
     }
     if (strcmp(str, "le") == 0) {
-        struct Token token = {
-            .kind = TokenLe, .line = line, .col = col, .value = {.kind = None}};
+        token.kind = TokenLe;
         return token;
     }
     if (strcmp(str, "gt") == 0) {
-        struct Token token = {
-            .kind = TokenGt, .line = line, .col = col, .value = {.kind = None}};
+        token.kind = TokenGt;
         return token;
     }
     if (strcmp(str, "ge") == 0) {
-        struct Token token = {
-            .kind = TokenGe, .line = line, .col = col, .value = {.kind = None}};
+        token.kind = TokenGe;
         return token;
     }
+
     if (strcmp(str, "land") == 0) {
-        struct Token token = {.kind = TokenLAnd,
-                              .line = line,
-                              .col = col,
-                              .value = {.kind = None}};
-		return token;
+        token.kind = TokenLAnd;
+        return token;
     }
     if (strcmp(str, "lor") == 0) {
-        struct Token token = {.kind = TokenLOr,
-                              .line = line,
-                              .col = col,
-                              .value = {.kind = None}};
+        token.kind = TokenLOr;
         return token;
     }
     if (strcmp(str, "lneg") == 0) {
-        struct Token token = {.kind = TokenLNeg,
-                              .line = line,
-                              .col = col,
-                              .value = {.kind = None}};
+        token.kind = TokenLNeg;
         return token;
     }
+
     if (is_int(str)) {
         int32_t int_value = strtol(str, NULL, 10);
-        struct Token token = {
-            .kind = TokenInt,
-            .line = line,
-            .col = col,
-            .value = {.kind = IntValue, .value = {.integer = int_value}}};
-        if (int_value > pow(2, 23) - 1) {
+        token.kind = TokenInt;
+        token.value.kind = IntValue;
+        token.value.value.integer = int_value;
+        if (int_value > pow(2, 23) - 1 || int_value < -pow(2, 23)) {
             fprintf(stderr,
                     "warning(%zu:%zd): `%d` cannot fit within 24 bits and will "
                     "be truncated\n",
@@ -123,26 +101,19 @@ struct Token token_get(char *str, size_t line, size_t col) {
         return token;
     }
     if (strcmp(str, "false") == 0) {
-        struct Token token = {
-            .kind = TokenBool,
-            .line = line,
-            .col = col,
-            .value = {.kind = BoolValue, .value = {.boolean = false}}};
+        token.kind = TokenBool;
+        token.value.kind = BoolValue;
+        token.value.value.boolean = false;
         return token;
     }
     if (strcmp(str, "true") == 0) {
-        struct Token token = {
-            .kind = TokenBool,
-            .line = line,
-            .col = col,
-            .value = {.kind = BoolValue, .value = {.boolean = true}}};
+        token.kind = TokenBool;
+        token.value.kind = BoolValue;
+        token.value.value.boolean = true;
         return token;
     }
     if (strcmp(str, "\n") == 0) {
-        struct Token token = {.kind = TokenNewLine,
-                              .line = line,
-                              .col = col,
-                              .value = {.kind = None}};
+        token.kind = TokenNewLine;
         return token;
     }
     fprintf(stderr, "error(%zu:%zu): Could not parse token `%s`\n", line + 1,

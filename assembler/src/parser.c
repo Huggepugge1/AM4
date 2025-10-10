@@ -8,8 +8,19 @@ bool expect(enum TokenKind token_kind, struct Token *token) {
     return token->kind == token_kind;
 }
 
+void parse_error_newline(struct Token *token) {
+    char str[256];
+    token_to_string(token, str);
+    fprintf(stderr, "error(%zu:%zu): `%s` not followed by a int or bool\n",
+            token->line, token->col, str);
+    exit(1);
+}
+
 struct Instruction parse_instruction(struct TokenVec *token_vec, size_t *i) {
     struct Token token = token_vec->elements[*i];
+    struct Instruction instruction;
+    instruction.value = token.value;
+
     if (token.kind == TokenPush) {
         if (expect(TokenInt, &token_vec->elements[*i + 1]) ||
             expect(TokenBool, &token_vec->elements[*i + 1])) {
@@ -28,7 +39,8 @@ struct Instruction parse_instruction(struct TokenVec *token_vec, size_t *i) {
             }
         } else {
             fprintf(stderr,
-                    "error(%zu:%zu): `push` not followed by a int or bool\n",
+                    "error(%zu:%zu): `push` not followed by a "
+                    "int / bool\n",
                     token.line, token.col);
             exit(1);
         }
@@ -37,146 +49,101 @@ struct Instruction parse_instruction(struct TokenVec *token_vec, size_t *i) {
     if (token.kind == TokenAdd) {
         if (expect(TokenNewLine, &token_vec->elements[*i + 1])) {
             *i += 2;
-            struct Instruction instruction = {.kind = InstructionAdd,
-                                              .value = token.value};
+            instruction.kind = InstructionAdd;
             return instruction;
         }
-
-        fprintf(stderr, "error(%zu:%zu): `add` not followed by a newline\n",
-                token.line, token.col);
-        exit(1);
+        parse_error_newline(&token);
     }
     if (token.kind == TokenSub) {
         if (expect(TokenNewLine, &token_vec->elements[*i + 1])) {
             *i += 2;
-            struct Instruction instruction = {.kind = InstructionSub,
-                                              .value = token.value};
+            instruction.kind = InstructionSub;
             return instruction;
         }
-        fprintf(stderr, "error(%zu:%zu): `sub` not followed by a newline\n",
-                token.line, token.col);
-        exit(1);
+        parse_error_newline(&token);
     }
     if (token.kind == TokenMul) {
         if (expect(TokenNewLine, &token_vec->elements[*i + 1])) {
             *i += 2;
-            struct Instruction instruction = {.kind = InstructionMul,
-                                              .value = token.value};
+            instruction.kind = InstructionMul;
             return instruction;
         }
-
-        fprintf(stderr, "error(%zu:%zu): `mul` not followed by a newline\n",
-                token.line, token.col);
-        exit(1);
+        parse_error_newline(&token);
     }
 
     if (token.kind == TokenEq) {
         if (expect(TokenNewLine, &token_vec->elements[*i + 1])) {
             *i += 2;
-            struct Instruction instruction = {.kind = InstructionEq,
-                                              .value = token.value};
+            instruction.kind = InstructionEq;
             return instruction;
         }
-        fprintf(stderr, "error(%zu:%zu): `eq` not followed by a newline\n",
-                token.line, token.col);
-        exit(1);
+        parse_error_newline(&token);
     }
     if (token.kind == TokenLt) {
         if (expect(TokenNewLine, &token_vec->elements[*i + 1])) {
             *i += 2;
-            struct Instruction instruction = {.kind = InstructionLt,
-                                              .value = token.value};
+            instruction.kind = InstructionLt;
             return instruction;
         }
-        fprintf(stderr, "error(%zu:%zu): `lt` not followed by a newline\n",
-                token.line, token.col);
-        exit(1);
+        parse_error_newline(&token);
     }
     if (token.kind == TokenLe) {
         if (expect(TokenNewLine, &token_vec->elements[*i + 1])) {
             *i += 2;
-            struct Instruction instruction = {.kind = InstructionLe,
-                                              .value = {.kind = None}};
+            instruction.kind = InstructionLe;
             return instruction;
         }
-
-        fprintf(stderr, "error(%zu:%zu): `le` not followed by a newline\n",
-                token.line, token.col);
-        exit(1);
+        parse_error_newline(&token);
     }
     if (token.kind == TokenGt) {
         if (expect(TokenNewLine, &token_vec->elements[*i + 1])) {
             *i += 2;
-            struct Instruction instruction = {.kind = InstructionGt,
-                                              .value = {.kind = None}};
+            instruction.kind = InstructionGt;
             return instruction;
         }
-
-        fprintf(stderr, "error(%zu:%zu): `gt` not followed by a newline\n",
-                token.line, token.col);
-        exit(1);
+        parse_error_newline(&token);
     }
     if (token.kind == TokenGe) {
         if (expect(TokenNewLine, &token_vec->elements[*i + 1])) {
             *i += 2;
-            struct Instruction instruction = {.kind = InstructionGe,
-                                              .value = {.kind = None}};
+            instruction.kind = InstructionGe;
             return instruction;
         }
-
-        fprintf(stderr, "error(%zu:%zu): `ge` not followed by a newline\n",
-                token.line, token.col);
-        exit(1);
+        parse_error_newline(&token);
     }
 
     if (token.kind == TokenLAnd) {
         if (expect(TokenNewLine, &token_vec->elements[*i + 1])) {
             *i += 2;
-            struct Instruction instruction = {.kind = InstructionLAnd,
-                                              .value = {.kind = None}};
+            instruction.kind = InstructionLAnd;
             return instruction;
         }
-
-        fprintf(stderr, "error(%zu:%zu): `land` not followed by a newline\n",
-                token.line, token.col);
-        exit(1);
+        parse_error_newline(&token);
     }
     if (token.kind == TokenLOr) {
         if (expect(TokenNewLine, &token_vec->elements[*i + 1])) {
             *i += 2;
-            struct Instruction instruction = {.kind = InstructionLOr,
-                                              .value = {.kind = None}};
+            instruction.kind = InstructionLOr;
             return instruction;
         }
-
-        fprintf(stderr, "error(%zu:%zu): `lor` not followed by a newline\n",
-                token.line, token.col);
-        exit(1);
+        parse_error_newline(&token);
     }
     if (token.kind == TokenLNeg) {
         if (expect(TokenNewLine, &token_vec->elements[*i + 1])) {
             *i += 2;
-            struct Instruction instruction = {.kind = InstructionLNeg,
-                                              .value = {.kind = None}};
+            instruction.kind = InstructionLNeg;
             return instruction;
         }
-
-        fprintf(stderr, "error(%zu:%zu): `lneg` not followed by a newline\n",
-                token.line, token.col);
-        exit(1);
+        parse_error_newline(&token);
     }
 
     if (token.kind == TokenNoop) {
         if (expect(TokenNewLine, &token_vec->elements[*i + 1])) {
             *i += 2;
-            struct Instruction instruction = {.kind = InstructionNoop,
-                                              .value = {.kind = None}};
+            instruction.kind = InstructionNoop;
             return instruction;
         }
-
-        fprintf(stderr, "error(%zu:%zu): `noop` not followed by a newline\n",
-                token.line, token.col);
-        exit(1);
+        parse_error_newline(&token);
     }
     char *token_string;
     token_kind_to_string(&token, &token_string);
