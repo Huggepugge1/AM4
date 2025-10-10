@@ -28,12 +28,6 @@ Instruction address. 24 bit number.
 ### Int
 0x10 | C
 
-### True
-0x1a
-
-### False
-0x1b
-
 ## Arithmetics
 ### Add
 0x20
