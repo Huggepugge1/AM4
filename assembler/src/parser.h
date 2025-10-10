@@ -6,6 +6,11 @@
 #include "value.h"
 
 enum InstructionKind {
+    InstructionNoop = 0x00,
+
+    InstructionJmp = 0x01,
+    InstructionJEQZ = 0x02,
+
     InstructionPush = 0x10,
 
     InstructionAdd = 0x20,
@@ -20,10 +25,9 @@ enum InstructionKind {
 
     InstructionLAnd = 0xaa,
     InstructionLOr = 0xab,
-
     InstructionLNeg = 0xb0,
 
-    InstructionNoop = 0x00,
+    InstructionLabel,
 };
 
 struct Instruction {
@@ -37,6 +41,22 @@ struct InstructionVec {
     struct Instruction *elements;
 };
 
+struct Label {
+    char *ident;
+    int32_t addr;
+};
+
+struct LabelMap {
+    size_t len;
+    size_t capacity;
+    struct Label *elements;
+};
+
+struct ParseResult {
+    struct InstructionVec *instructions;
+    struct LabelMap *labels;
+};
+
 /**
  * Generate a vector (InstructionVec) of Instructions
  *
@@ -44,7 +64,7 @@ struct InstructionVec {
  *
  * @returns InstructionVec* All the instructions
  */
-struct InstructionVec *parse(struct TokenVec *token_vec);
+struct ParseResult parse(struct TokenVec *token_vec);
 
 /**
  * Create a new InstructionVec*
@@ -77,3 +97,44 @@ void instruction_vec_destroy(struct InstructionVec *vec);
  * @param vec
  */
 void instruction_vec_print(struct InstructionVec *vec);
+
+/**
+ * Create a new LabelMap*
+ *
+ * @returns LabelMap* empty LabelMap
+ */
+struct LabelMap *label_map_new();
+
+/**
+ * Insert a Label into a LabelMap
+ *
+ * @note If there is not enough space, space is allocated
+ *
+ * @param map
+ * @param label
+ */
+void label_map_insert(struct LabelMap *map, struct Label label);
+
+/**
+ * Insert a Label into a LabelMap
+ *
+ * @note If there is not enough space, space is allocated
+ *
+ * @param map
+ * @param char *ident
+ */
+void label_map_get(struct LabelMap *map, char *ident);
+
+/**
+ * Free a LabelMap
+ *
+ * @param map
+ */
+void label_map_destroy(struct LabelMap *map);
+
+/**
+ * Print all instructions in a TokenVec
+ *
+ * @param map
+ */
+void label_map_print(struct LabelMap *map);

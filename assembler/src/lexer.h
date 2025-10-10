@@ -6,6 +6,11 @@
 #include <stddef.h>
 
 enum TokenKind {
+    TokenNoop,
+
+    TokenJmp,
+    TokenJEQZ,
+
     TokenPush,
 
     TokenAdd,
@@ -22,7 +27,7 @@ enum TokenKind {
     TokenLOr,
     TokenLNeg,
 
-    TokenNoop,
+    TokenLabel,
 
     TokenInt,
     TokenBool,
