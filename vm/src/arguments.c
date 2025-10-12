@@ -24,7 +24,7 @@ bool str_starts_with(char *str, char *pattern) {
 }
 
 struct Arguments arguments_parse(int argc, char **argv) {
-	// Skip the run command
+    // Skip the run command
     struct Arguments args = {.input = NULL};
 
     for (int i = 1; i < argc; i++) {
