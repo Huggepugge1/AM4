@@ -5,11 +5,6 @@
 #include "arguments.h"
 #include "binary.h"
 
-void print_binary(int value) {
-    for (unsigned mask = ~(~0u >> 1); mask; mask >>= 1)
-        putchar('0' + !!(value & mask));
-}
-
 int main(int argc, char **argv) {
     struct Arguments args = arguments_parse(argc, argv);
     arguments_print(args);
