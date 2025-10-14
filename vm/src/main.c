@@ -1,7 +1,19 @@
+#include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
-int main() {
-  printf("Hello World again\n");
+#include "arguments.h"
+#include "binary.h"
 
-  return 0;
+int main(int argc, char **argv) {
+    struct Arguments args = arguments_parse(argc, argv);
+    arguments_print(args);
+    if (args.input == NULL) {
+        fprintf(stderr, "am4vm needs a filename. See `--help` for more info");
+        exit(1);
+    }
+
+    struct BinaryFile *bin = read_binary_file(args.input);
+
+    free_binary_file(bin);
 }
