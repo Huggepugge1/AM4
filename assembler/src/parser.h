@@ -198,7 +198,7 @@ int32_t ident_map_get(struct IdentMap *map, char *ident);
 void ident_map_destroy(struct IdentMap *map);
 
 /**
- * Print all instructions in a TokenVec
+ * Print all identifiers in an IdentMap
  *
  * @param map
  */
