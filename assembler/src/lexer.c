@@ -35,6 +35,15 @@ struct Token token_get(char *str, size_t line, size_t col) {
         return token;
     }
 
+    if (strcmp(str, "jmp") == 0) {
+        token.kind = TokenJmp;
+        return token;
+    }
+    if (strcmp(str, "jeqz") == 0) {
+        token.kind = TokenJEQZ;
+        return token;
+    }
+
     if (strcmp(str, "push") == 0) {
         token.kind = TokenPush;
         return token;
@@ -87,6 +96,15 @@ struct Token token_get(char *str, size_t line, size_t col) {
         return token;
     }
 
+    if (str[strlen(str) - 1] == ':') {
+        token.kind = TokenLabel;
+        token.value.kind = StringValue;
+        str[strlen(str) - 1] = '\0';
+        token.value.value.string = calloc(strlen(str) + 1, sizeof(char));
+        strcpy(token.value.value.string, str);
+        return token;
+    }
+
     if (is_int(str)) {
         int32_t int_value = strtol(str, NULL, 10);
         token.kind = TokenInt;
@@ -100,6 +118,7 @@ struct Token token_get(char *str, size_t line, size_t col) {
         }
         return token;
     }
+
     if (strcmp(str, "false") == 0) {
         token.kind = TokenBool;
         token.value.kind = BoolValue;
@@ -112,18 +131,30 @@ struct Token token_get(char *str, size_t line, size_t col) {
         token.value.value.boolean = true;
         return token;
     }
+
     if (strcmp(str, "\n") == 0) {
         token.kind = TokenNewLine;
         return token;
     }
-    fprintf(stderr, "error(%zu:%zu): Could not parse token `%s`\n", line + 1,
-            col + 1, str);
+    fprintf(stderr, "error(%zu:%zu): Could not parse token `%s`\n", line, col,
+            str);
     exit(1);
 }
 
 void token_kind_to_string(struct Token *token,
                           __attribute__((unused)) char **str) {
     switch (token->kind) {
+    case TokenNoop:
+        *str = "noop";
+        return;
+
+    case TokenJmp:
+        *str = "jmp";
+        return;
+    case TokenJEQZ:
+        *str = "jeqz";
+        return;
+
     case TokenPush:
         *str = "push";
         return;
@@ -164,9 +195,10 @@ void token_kind_to_string(struct Token *token,
         *str = "lneg";
         return;
 
-    case TokenNoop:
-        *str = "noop";
+    case TokenLabel:
+        *str = token->value.value.string;
         return;
+
     case TokenInt:
         *str = "int";
         return;

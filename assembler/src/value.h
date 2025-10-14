@@ -4,10 +4,11 @@
 #include <stdint.h>
 
 struct Value {
-    enum Kind { None, IntValue, BoolValue } kind;
+    enum Kind { None, IntValue, BoolValue, StringValue } kind;
     union value {
         int32_t integer;
         bool boolean;
+        char *string;
     } value;
 };
 

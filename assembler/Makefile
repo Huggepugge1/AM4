@@ -1,5 +1,5 @@
 CC = gcc
-COPTS = -Wall -Wextra -pedantic
+COPTS = -Wall -Wextra -pedantic -g
 OBJECT_FLAG = -c
 
 LINKER = ld

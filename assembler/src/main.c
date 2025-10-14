@@ -17,13 +17,16 @@ int main(int argc, char **argv) {
     struct TokenVec *tokens = lex(args.input);
     token_vec_print(tokens);
 
-    struct InstructionVec *instructions = parse(tokens);
-    instruction_vec_print(instructions);
+    struct ParseResult result = parse(tokens);
+    instruction_vec_print(result.instructions);
+    label_map_print(result.labels);
 
-    generate_code_and_write_to_file(instructions, args.output);
+    generate_code_and_write_to_file(result.instructions, result.labels,
+                                    args.output);
 
     token_vec_destroy(tokens);
-    instruction_vec_destroy(instructions);
+    instruction_vec_destroy(result.instructions);
+    label_map_destroy(result.labels);
 
     return 0;
 }

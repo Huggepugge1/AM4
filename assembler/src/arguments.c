@@ -1,8 +1,9 @@
-#include "arguments.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "arguments.h"
 
 void print_help();
 
@@ -16,9 +17,9 @@ bool str_starts_with(char *str, char *pattern) {
 }
 
 struct Arguments arguments_parse(int argc, char **argv) {
-    // Skip the run command
     struct Arguments args = {.input = NULL, .output = NULL};
 
+    // i == 1 becasue argv[0] is just the ./am4asm
     for (int i = 1; i < argc; i++) {
         if (str_starts_with(argv[i], "--")) {
             if (strcmp(argv[i], "--help") == 0) {

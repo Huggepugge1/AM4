@@ -11,5 +11,8 @@ void value_to_string(struct Value *value, char **str) {
     case BoolValue:
         *str = "bool";
         return;
+    case StringValue:
+        *str = value->value.string;
+        return;
     }
 }
