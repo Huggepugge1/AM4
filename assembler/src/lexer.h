@@ -27,7 +27,11 @@ enum TokenKind {
     TokenLOr,
     TokenLNeg,
 
+    TokenFetch,
+    TokenStore,
+
     TokenLabel,
+    TokenIdent,
 
     TokenInt,
     TokenBool,

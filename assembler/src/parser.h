@@ -27,7 +27,11 @@ enum InstructionKind {
     InstructionLOr = 0xab,
     InstructionLNeg = 0xb0,
 
+    InstructionFetch = 0xc0,
+    InstructionStore = 0xc1,
+
     InstructionLabel,
+    InstructionIdent,
 };
 
 struct Instruction {
@@ -52,9 +56,21 @@ struct LabelMap {
     struct Label *elements;
 };
 
+struct Ident {
+    char *ident;
+    int32_t addr;
+};
+
+struct IdentMap {
+    size_t len;
+    size_t capacity;
+    struct Ident *elements;
+};
+
 struct ParseResult {
     struct InstructionVec *instructions;
     struct LabelMap *labels;
+    struct IdentMap *idents;
 };
 
 /**
@@ -142,3 +158,48 @@ void label_map_destroy(struct LabelMap *map);
  * @param map
  */
 void label_map_print(struct LabelMap *map);
+
+/**
+ * Create a new IdentMap*
+ *
+ * @returns IdentMap* empty IdentMap
+ */
+struct IdentMap *ident_map_new();
+
+/**
+ * Insert a ident into a IdentMap
+ *
+ * @note If there is not enough space, space is allocated
+ *
+ * @param map
+ * @param ident
+ */
+void ident_map_insert(struct IdentMap *map, char *ident);
+
+/**
+ * Get the address of a ident
+ *
+ * @note Returns -1 on fail
+ *
+ * @note If there is not enough space, space is allocated
+ *
+ * @param map
+ * @param char *ident
+ *
+ * @returns int32_t
+ */
+int32_t ident_map_get(struct IdentMap *map, char *ident);
+
+/**
+ * Free a IdentMap
+ *
+ * @param map
+ */
+void ident_map_destroy(struct IdentMap *map);
+
+/**
+ * Print all identifiers in an IdentMap
+ *
+ * @param map
+ */
+void ident_map_print(struct IdentMap *map);

@@ -23,6 +23,25 @@ bool is_int(char *str) {
     return true;
 }
 
+bool is_ident(char *str) {
+    while (*str) {
+        // Less than 0(48)
+        if (*str < 48 ||
+            // Between 9(57)  and A(65)
+            (57 < *str && *str < 65)
+            // Between Z(90)  and _(95)
+            || (90 < *str && *str < 95)
+            // Between _(95)  and a(97)
+            || (95 < *str && *str < 97)
+            // > z(122)
+            || *str > 122) {
+            return false;
+        }
+        str++;
+    }
+    return true;
+}
+
 void lex_string(char *str, size_t line, struct TokenVec *vec);
 
 struct Token token_get(char *str, size_t line, size_t col) {
@@ -96,6 +115,15 @@ struct Token token_get(char *str, size_t line, size_t col) {
         return token;
     }
 
+    if (strcmp(str, "fetch") == 0) {
+        token.kind = TokenFetch;
+        return token;
+    }
+    if (strcmp(str, "store") == 0) {
+        token.kind = TokenStore;
+        return token;
+    }
+
     if (str[strlen(str) - 1] == ':') {
         token.kind = TokenLabel;
         token.value.kind = StringValue;
@@ -134,6 +162,14 @@ struct Token token_get(char *str, size_t line, size_t col) {
 
     if (strcmp(str, "\n") == 0) {
         token.kind = TokenNewLine;
+        return token;
+    }
+
+    if (is_ident(str)) {
+        token.kind = TokenIdent;
+        token.value.kind = StringValue;
+        token.value.value.string = calloc(strlen(str) + 1, sizeof(char));
+        strcpy(token.value.value.string, str);
         return token;
     }
     fprintf(stderr, "error(%zu:%zu): Could not parse token `%s`\n", line, col,
@@ -195,8 +231,18 @@ void token_kind_to_string(struct Token *token,
         *str = "lneg";
         return;
 
+    case TokenFetch:
+        *str = "fetch";
+        return;
+    case TokenStore:
+        *str = "store";
+        return;
+
     case TokenLabel:
-        *str = token->value.value.string;
+        *str = "label";
+        return;
+    case TokenIdent:
+        *str = "ident";
         return;
 
     case TokenInt:
