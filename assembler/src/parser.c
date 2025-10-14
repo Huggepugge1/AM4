@@ -258,7 +258,7 @@ void parse_instruction(struct TokenVec *token_vec, struct LabelMap *labels,
         fprintf(stderr, "error(%zu:%zu): unexpected token `%s`\n", token.line,
                 token.col, token_string);
         fprintf(stderr,
-                "An identifier has to be proceeded by `store` or `load`");
+                "An identifier has to be preceded by `store` or `load`");
         exit(1);
     }
     char *token_string;
