@@ -11,7 +11,8 @@ struct Code {
     size_t len;
 };
 
-struct Code generate_code(struct InstructionVec *instructions) {
+struct Code generate_code(struct InstructionVec *instructions,
+                          struct LabelMap *map) {
     struct Code code = {
         .bin = calloc(65535, sizeof(uint32_t)),
         .len = 0,
@@ -19,9 +20,28 @@ struct Code generate_code(struct InstructionVec *instructions) {
     for (size_t i = 0; i < instructions->len; i++) {
         struct Instruction instruction = instructions->elements[i];
 
-        // We don't care what type value is, only that it is
-        // at most 24 bits long so it does not corrupt our OPCODE
-        int32_t value = instruction.value.value.integer & 0xFFFFFF;
+        int32_t value;
+        switch (instruction.value.kind) {
+        case None:
+            value = 0;
+            break;
+        case IntValue:
+            value = instruction.value.value.integer;
+            break;
+        case BoolValue:
+            value = instruction.value.value.boolean;
+            break;
+            // The only strings are labels
+        case StringValue:
+            value = label_map_get(map, instruction.value.value.string);
+            if (value == -1) {
+                printf("%s is not a valid label!",
+                       instruction.value.value.string);
+                exit(1);
+            }
+            break;
+        }
+        value = value & 0xFFFFFF;
         code.bin[code.len] = instruction.kind << 24 | value;
         code.len++;
     }
@@ -29,8 +49,8 @@ struct Code generate_code(struct InstructionVec *instructions) {
 }
 
 void generate_code_and_write_to_file(struct InstructionVec *instructions,
-                                     char *output_file) {
-    struct Code code = generate_code(instructions);
+                                     struct LabelMap *map, char *output_file) {
+    struct Code code = generate_code(instructions, map);
     FILE *output = fopen(output_file, "w");
     fwrite(code.bin, sizeof(uint32_t), code.len, output);
     fclose(output);

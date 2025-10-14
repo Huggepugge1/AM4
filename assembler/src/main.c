@@ -21,7 +21,8 @@ int main(int argc, char **argv) {
     instruction_vec_print(result.instructions);
     label_map_print(result.labels);
 
-    generate_code_and_write_to_file(result.instructions, args.output);
+    generate_code_and_write_to_file(result.instructions, result.labels,
+                                    args.output);
 
     token_vec_destroy(tokens);
     instruction_vec_destroy(result.instructions);

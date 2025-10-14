@@ -116,14 +116,18 @@ struct LabelMap *label_map_new();
 void label_map_insert(struct LabelMap *map, struct Label label);
 
 /**
- * Insert a Label into a LabelMap
+ * Get the address of a label
+ *
+ * @note Returns -1 on fail
  *
  * @note If there is not enough space, space is allocated
  *
  * @param map
  * @param char *ident
+ *
+ * @returns int32_t
  */
-void label_map_get(struct LabelMap *map, char *ident);
+int32_t label_map_get(struct LabelMap *map, char *ident);
 
 /**
  * Free a LabelMap

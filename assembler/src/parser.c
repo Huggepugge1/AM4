@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "lexer.h"
 #include "parser.h"
@@ -369,6 +370,15 @@ void label_map_insert(struct LabelMap *map, struct Label label) {
     }
 
     map->elements[map->len++] = label;
+}
+
+int32_t label_map_get(struct LabelMap *map, char *ident) {
+    for (size_t i = 0; i < map->len; i++) {
+        if (strcmp(map->elements[i].ident, ident) == 0) {
+            return map->elements[i].addr;
+        }
+    }
+    return -1;
 }
 
 void label_map_destroy(struct LabelMap *map) {
