@@ -16,7 +16,8 @@ int main(int argc, char **argv) {
 
     struct BinaryFile *bin = read_binary_file(args.input);
 
-    run_vm(bin);
+    int32_t result = run_vm(bin);
+    printf("Result: %d\n", result);
 
     free_binary_file(bin);
 }
