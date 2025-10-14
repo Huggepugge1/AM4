@@ -469,7 +469,7 @@ void label_map_print(struct LabelMap *map) {
 
 struct IdentMap *ident_map_new() {
     struct IdentMap *map = calloc(1, sizeof(struct IdentMap));
-    map->elements = calloc(1, sizeof(struct IdentMap));
+    map->elements = calloc(1, sizeof(struct Ident));
     map->len = 0;
     map->capacity = 1;
     return map;
