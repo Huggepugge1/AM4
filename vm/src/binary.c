@@ -13,7 +13,7 @@ struct BinaryFile *read_binary_file(char *filename) {
 
     struct BinaryFile *file = calloc(1, sizeof(struct BinaryFile));
 
-    fread(&file->instruction_start, sizeof(uint32_t), 1, fptr);
+    fread(&file->idents, sizeof(uint32_t), 1, fptr);
 
     fread(&file->instruction_len, sizeof(uint32_t), 1, fptr);
 

@@ -4,6 +4,7 @@
 
 #include "arguments.h"
 #include "binary.h"
+#include "vm.h"
 
 int main(int argc, char **argv) {
     struct Arguments args = arguments_parse(argc, argv);
@@ -14,6 +15,8 @@ int main(int argc, char **argv) {
     }
 
     struct BinaryFile *bin = read_binary_file(args.input);
+
+    run_vm(bin);
 
     free_binary_file(bin);
 }
