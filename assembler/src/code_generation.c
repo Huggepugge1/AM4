@@ -17,8 +17,10 @@ struct Code generate_code(struct ParseResult result) {
     struct IdentMap *idents = result.idents;
     struct Code code = {
         .bin = calloc(65535, sizeof(uint32_t)),
-        .len = 0,
+        .len = 2,
     };
+    code.bin[1] = instructions->len;
+    code.bin[0] = idents->len;
     for (size_t i = 0; i < instructions->len; i++) {
         struct Instruction instruction = instructions->elements[i];
 
@@ -43,7 +45,6 @@ struct Code generate_code(struct ParseResult result) {
                            instruction.value.value.string);
                     exit(1);
                 }
-                value += instructions->len;
             } else {
                 value = label_map_get(labels, instruction.value.value.string);
                 if (value == -1) {
@@ -51,6 +52,7 @@ struct Code generate_code(struct ParseResult result) {
                            instruction.value.value.string);
                     exit(1);
                 }
+                value += idents->len;
             }
             break;
         }

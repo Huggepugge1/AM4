@@ -481,7 +481,7 @@ void ident_map_insert(struct IdentMap *map, char *ident_string) {
         return;
     if (map->len == map->capacity) {
         map->elements =
-            realloc(map->elements, map->capacity * 2 * sizeof(char *));
+            realloc(map->elements, map->capacity * 2 * sizeof(struct Ident));
         map->capacity *= 2;
     }
 
