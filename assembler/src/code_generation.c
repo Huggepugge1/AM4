@@ -41,15 +41,15 @@ struct Code generate_code(struct ParseResult result) {
                 instruction.kind == InstructionStore) {
                 value = ident_map_get(idents, instruction.value.value.string);
                 if (value == -1) {
-                    printf("%s is not a valid identifier!",
-                           instruction.value.value.string);
+                    fprintf(stderr, "%s is not a valid identifier!",
+                            instruction.value.value.string);
                     exit(1);
                 }
             } else {
                 value = label_map_get(labels, instruction.value.value.string);
                 if (value == -1) {
-                    printf("%s is not a valid label!",
-                           instruction.value.value.string);
+                    fprintf(stderr, "%s is not a valid label!",
+                            instruction.value.value.string);
                     exit(1);
                 }
                 value += idents->len;
