@@ -11,8 +11,10 @@ struct Code {
     size_t len;
 };
 
-struct Code generate_code(struct InstructionVec *instructions,
-                          struct LabelMap *map) {
+struct Code generate_code(struct ParseResult result) {
+    struct InstructionVec *instructions = result.instructions;
+    struct LabelMap *labels = result.labels;
+    struct IdentMap *idents = result.idents;
     struct Code code = {
         .bin = calloc(65535, sizeof(uint32_t)),
         .len = 0,
@@ -31,13 +33,24 @@ struct Code generate_code(struct InstructionVec *instructions,
         case BoolValue:
             value = instruction.value.value.boolean;
             break;
-            // The only strings are labels
+        // The only strings are labels && idents
         case StringValue:
-            value = label_map_get(map, instruction.value.value.string);
-            if (value == -1) {
-                printf("%s is not a valid label!",
-                       instruction.value.value.string);
-                exit(1);
+            if (instruction.kind == InstructionFetch ||
+                instruction.kind == InstructionStore) {
+                value = ident_map_get(idents, instruction.value.value.string);
+                if (value == -1) {
+                    printf("%s is not a valid identifier!",
+                           instruction.value.value.string);
+                    exit(1);
+                }
+                value += instructions->len;
+            } else {
+                value = label_map_get(labels, instruction.value.value.string);
+                if (value == -1) {
+                    printf("%s is not a valid label!",
+                           instruction.value.value.string);
+                    exit(1);
+                }
             }
             break;
         }
@@ -48,9 +61,9 @@ struct Code generate_code(struct InstructionVec *instructions,
     return code;
 }
 
-void generate_code_and_write_to_file(struct InstructionVec *instructions,
-                                     struct LabelMap *map, char *output_file) {
-    struct Code code = generate_code(instructions, map);
+void generate_code_and_write_to_file(struct ParseResult result,
+                                     char *output_file) {
+    struct Code code = generate_code(result);
     FILE *output = fopen(output_file, "w");
     fwrite(code.bin, sizeof(uint32_t), code.len, output);
     fclose(output);

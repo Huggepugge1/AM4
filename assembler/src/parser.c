@@ -18,8 +18,8 @@ void parse_error_newline(struct Token *token) {
 }
 
 void parse_instruction(struct TokenVec *token_vec, struct LabelMap *labels,
-                       struct Instruction *instruction, size_t instruction_addr,
-                       size_t *i) {
+                       struct IdentMap *idents, struct Instruction *instruction,
+                       size_t instruction_addr, size_t *i) {
     struct Token token = token_vec->elements[*i];
     instruction->value = token.value;
 
@@ -47,8 +47,7 @@ void parse_instruction(struct TokenVec *token_vec, struct LabelMap *labels,
                 exit(1);
             }
         } else {
-            fprintf(stderr,
-                    "error(%zu:%zu): `jmp` not followed by an address\n",
+            fprintf(stderr, "error(%zu:%zu): `jmp` not followed by a label\n",
                     token.line, token.col);
             exit(1);
         }
@@ -70,7 +69,7 @@ void parse_instruction(struct TokenVec *token_vec, struct LabelMap *labels,
             }
         } else {
             fprintf(stderr,
-                    "error(%zu:%zu): `jmpeqz` not followed by an address\n",
+                    "error(%zu:%zu): `jmpeqz` not followed by a label\n",
                     token.line, token.col);
             exit(1);
         }
@@ -192,6 +191,56 @@ void parse_instruction(struct TokenVec *token_vec, struct LabelMap *labels,
         parse_error_newline(&token);
     }
 
+    if (token.kind == TokenFetch) {
+        if (expect(TokenIdent, &token_vec->elements[*i + 1])) {
+            if (expect(TokenNewLine, &token_vec->elements[*i + 2])) {
+                struct Token token = token_vec->elements[*i + 1];
+                *i += 3;
+                instruction->kind = InstructionFetch;
+                instruction->value = token.value;
+                return;
+            } else {
+                fprintf(
+                    stderr,
+                    "error(%zu:%zu): `fetch %s` not followed by a newline\n",
+                    token.line, token.col, instruction->value.value.string);
+                exit(1);
+            }
+        } else {
+            fprintf(stderr,
+                    "error(%zu:%zu): `fetch` not followed by an identifier\n",
+                    token.line, token.col);
+            exit(1);
+        }
+    }
+    if (token.kind == TokenStore) {
+        if (expect(TokenIdent, &token_vec->elements[*i + 1])) {
+            if (expect(TokenNewLine, &token_vec->elements[*i + 2])) {
+                struct Token token = token_vec->elements[*i + 1];
+                *i += 3;
+                ident_map_insert(idents, token.value.value.string);
+                instruction->kind = InstructionStore;
+                char *string_value =
+                    calloc(strlen(token.value.value.string) + 1, sizeof(char));
+                strcpy(string_value, token.value.value.string);
+                instruction->value.kind = StringValue;
+                instruction->value.value.string = string_value;
+                return;
+            } else {
+                fprintf(
+                    stderr,
+                    "error(%zu:%zu): `store %s` not followed by a newline\n",
+                    token.line, token.col, instruction->value.value.string);
+                exit(1);
+            }
+        } else {
+            fprintf(stderr,
+                    "error(%zu:%zu): `store` not followed by an identifier\n",
+                    token.line, token.col);
+            exit(1);
+        }
+    }
+
     if (token.kind == TokenLabel) {
         if (expect(TokenNewLine, &token_vec->elements[*i + 1])) {
             *i += 2;
@@ -203,6 +252,15 @@ void parse_instruction(struct TokenVec *token_vec, struct LabelMap *labels,
         }
         parse_error_newline(&token);
     }
+    if (token.kind == TokenIdent) {
+        char *token_string;
+        token_kind_to_string(&token, &token_string);
+        fprintf(stderr, "error(%zu:%zu): unexpected token `%s`\n", token.line,
+                token.col, token_string);
+        fprintf(stderr,
+                "An identifier has to be proceeded by `store` or `load`");
+        exit(1);
+    }
     char *token_string;
     token_kind_to_string(&token, &token_string);
     fprintf(stderr, "error(%zu:%zu): unexpected token `%s`\n", token.line,
@@ -213,8 +271,9 @@ void parse_instruction(struct TokenVec *token_vec, struct LabelMap *labels,
 struct ParseResult parse(struct TokenVec *token_vec) {
     struct InstructionVec *instructions = instruction_vec_new();
     struct LabelMap *labels = label_map_new();
-    struct ParseResult result = {.instructions = instructions,
-                                 .labels = labels};
+    struct IdentMap *idents = ident_map_new();
+    struct ParseResult result = {
+        .instructions = instructions, .labels = labels, .idents = idents};
 
     // Relative addr to the current instruction
     size_t instruction_addr = 0;
@@ -227,8 +286,8 @@ struct ParseResult parse(struct TokenVec *token_vec) {
             i++;
         }
         struct Instruction instruction;
-        parse_instruction(token_vec, labels, &instruction, instruction_addr,
-                          &i);
+        parse_instruction(token_vec, labels, idents, &instruction,
+                          instruction_addr, &i);
 
         if (instruction.kind != InstructionLabel) {
             instruction_vec_push(instructions, instruction);
@@ -298,7 +357,17 @@ void instruction_kind_to_string(struct Instruction *instruction,
         *str = "lor";
         return;
 
+    case InstructionFetch:
+        *str = "fetch";
+        return;
+    case InstructionStore:
+        *str = "store";
+        return;
+
     case InstructionLabel:
+        *str = instruction->value.value.string;
+        return;
+    case InstructionIdent:
         *str = instruction->value.value.string;
         return;
     }
@@ -394,6 +463,54 @@ void label_map_print(struct LabelMap *map) {
     for (size_t i = 0; i < map->len; i++) {
         struct Label label = map->elements[i];
         printf("  %s: %d\n", label.ident, label.addr);
+    }
+    printf("}\n");
+}
+
+struct IdentMap *ident_map_new() {
+    struct IdentMap *map = calloc(1, sizeof(struct IdentMap));
+    map->elements = calloc(1, sizeof(struct IdentMap));
+    map->len = 0;
+    map->capacity = 1;
+    return map;
+}
+
+void ident_map_insert(struct IdentMap *map, char *ident_string) {
+    // Ident already in map
+    if (ident_map_get(map, ident_string) != -1)
+        return;
+    if (map->len == map->capacity) {
+        map->elements =
+            realloc(map->elements, map->capacity * 2 * sizeof(char *));
+        map->capacity *= 2;
+    }
+
+    struct Ident ident = {.ident = ident_string, .addr = map->len};
+    map->elements[map->len++] = ident;
+}
+
+int32_t ident_map_get(struct IdentMap *map, char *ident) {
+    for (size_t i = 0; i < map->len; i++) {
+        if (strcmp(map->elements[i].ident, ident) == 0) {
+            return map->elements[i].addr;
+        }
+    }
+    return -1;
+}
+
+void ident_map_destroy(struct IdentMap *map) {
+    for (size_t i = 0; i < map->len; i++) {
+        free(map->elements[i].ident);
+    }
+    free(map->elements);
+    free(map);
+}
+
+void ident_map_print(struct IdentMap *map) {
+    printf("struct IdentMap {\n");
+    for (size_t i = 0; i < map->len; i++) {
+        struct Ident ident = map->elements[i];
+        printf("  %s: %d\n", ident.ident, ident.addr);
     }
     printf("}\n");
 }
