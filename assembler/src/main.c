@@ -14,13 +14,13 @@ int main(int argc, char **argv) {
     }
 
     struct TokenVec *tokens = lex(args.input);
-    struct ParseResult parlse_result = parse(tokens);
-    generate_binary_and_write_to_file(parlse_result, args.output);
+    struct ParseResult parse_result = parse(tokens);
+    generate_binary_and_write_to_file(parse_result, args.output);
 
     token_vec_destroy(tokens);
-    instruction_vec_destroy(parlse_result.instructions);
-    label_map_destroy(parlse_result.labels);
-    ident_map_destroy(parlse_result.idents);
+    instruction_vec_destroy(parse_result.instructions);
+    label_map_destroy(parse_result.labels);
+    ident_map_destroy(parse_result.idents);
 
     return 0;
 }
