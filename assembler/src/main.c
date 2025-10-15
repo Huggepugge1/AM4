@@ -8,26 +8,19 @@
 
 int main(int argc, char **argv) {
     struct Arguments args = arguments_parse(argc, argv);
-    arguments_print(args);
     if (args.input == NULL) {
         fprintf(stderr, "am4asm needs a filename. See `--help` for more info");
         exit(1);
     }
 
     struct TokenVec *tokens = lex(args.input);
-    token_vec_print(tokens);
-
-    struct ParseResult result = parse(tokens);
-    instruction_vec_print(result.instructions);
-    label_map_print(result.labels);
-    ident_map_print(result.idents);
-
-    generate_code_and_write_to_file(result, args.output);
+    struct ParseResult parlse_result = parse(tokens);
+    generate_binary_and_write_to_file(parlse_result, args.output);
 
     token_vec_destroy(tokens);
-    instruction_vec_destroy(result.instructions);
-    label_map_destroy(result.labels);
-    ident_map_destroy(result.idents);
+    instruction_vec_destroy(parlse_result.instructions);
+    label_map_destroy(parlse_result.labels);
+    ident_map_destroy(parlse_result.idents);
 
     return 0;
 }

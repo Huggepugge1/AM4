@@ -1,5 +1,4 @@
 #include <ctype.h>
-#include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,9 +8,11 @@
 #include "lexer.h"
 #include "value.h"
 
-bool char_is_white_space(char c) { return c == ' ' || c == '\n' || c == '\t'; }
+bool char_is_white_space(const char c) {
+    return c == ' ' || c == '\n' || c == '\t' || c == '\r';
+}
 
-bool is_int(char *str) {
+bool is_int(const char *str) {
     if (*str == '-') {
         str++;
     }
@@ -23,18 +24,9 @@ bool is_int(char *str) {
     return true;
 }
 
-bool is_ident(char *str) {
+bool is_ident(const char *str) {
     while (*str) {
-        // Less than 0(48)
-        if (*str < 48 ||
-            // Between 9(57)  and A(65)
-            (57 < *str && *str < 65)
-            // Between Z(90)  and _(95)
-            || (90 < *str && *str < 95)
-            // Between _(95)  and a(97)
-            || (95 < *str && *str < 97)
-            // > z(122)
-            || *str > 122) {
+        if (!(isalnum(*str) || *str == '_')) {
             return false;
         }
         str++;
@@ -42,12 +34,9 @@ bool is_ident(char *str) {
     return true;
 }
 
-void lex_string(char *str, size_t line, struct TokenVec *vec);
+void lex_line(char *str, size_t line, struct TokenVec *vec);
 
-struct Token token_get(char *str, size_t line, size_t col) {
-    // Line has to be one indexed
-    line += 1;
-    col += 1;
+struct Token token_get(const char *str, size_t line, size_t col) {
     struct Token token = {.line = line, .col = col, .value = {.kind = None}};
     if (strcmp(str, "noop") == 0) {
         token.kind = TokenNoop;
@@ -127,7 +116,6 @@ struct Token token_get(char *str, size_t line, size_t col) {
     if (str[strlen(str) - 1] == ':') {
         token.kind = TokenLabel;
         token.value.kind = StringValue;
-        str[strlen(str) - 1] = '\0';
         token.value.value.string = calloc(strlen(str) + 1, sizeof(char));
         strcpy(token.value.value.string, str);
         return token;
@@ -138,7 +126,7 @@ struct Token token_get(char *str, size_t line, size_t col) {
         token.kind = TokenInt;
         token.value.kind = IntValue;
         token.value.value.integer = int_value;
-        if (int_value > pow(2, 23) - 1 || int_value < -pow(2, 23)) {
+        if (int_value > (1 << 23) - 1 || int_value < -(1 << 23)) {
             fprintf(stderr,
                     "warning(%zu:%zd): `%d` cannot fit within 24 bits and will "
                     "be truncated\n",
@@ -264,7 +252,9 @@ void token_to_string(struct Token *token, char *str) {
     token_kind_to_string(token, &token_kind);
     char *value;
     value_to_string(&token->value, &value);
-    sprintf(str, "struct Token { .kind = %s, .value = %s }", token_kind, value);
+    sprintf(str,
+            "struct Token { .kind = %s, .value = %s, .line = %zu, .col = %zu }",
+            token_kind, value, token->line, token->col);
 }
 
 struct TokenVec *lex(char *filename) {
@@ -272,54 +262,84 @@ struct TokenVec *lex(char *filename) {
 
     FILE *fptr;
     fptr = fopen(filename, "r");
-    char file_contents[65535];
-    size_t line = 0;
-    while (fgets(file_contents, 65535, fptr)) {
-        lex_string(file_contents, line, vec);
-        line++;
+    if (fptr == NULL) {
+        fprintf(stderr, "Failed to open file: %s\n", filename);
+        exit(1);
+    }
+
+    char *line = NULL;
+    size_t len = 0;
+    ssize_t chars_read;
+
+    // One-indexed
+    size_t line_num = 1;
+    while ((chars_read = getline(&line, &len, fptr)) != -1) {
+        lex_line(line, line_num, vec);
+        line_num++;
     }
 
     fclose(fptr);
+    free(line);
 
     return vec;
 }
 
-void lex_string(char *str, size_t line, struct TokenVec *vec) {
-    char current_string[256] = {0};
-    size_t pos = 0;
-    size_t col = 0;
+#define MAX_TOKEN_SIZE 256
+
+void lex_line(char *str, size_t line, struct TokenVec *vec) {
+    char current_token[MAX_TOKEN_SIZE] = {0};
+
+    // One-indexed
+    size_t col = 1;
 
     while (*str) {
+        size_t pos = 0;
         while (*str && !char_is_white_space(*str)) {
-            if (pos > 0 && *str == '/' && current_string[pos - 1] == '/') {
-                token_vec_push(vec, token_get("\n", line, strlen(str)));
+            if (pos > 0 && *str == '/' && current_token[pos - 1] == '/') {
+                // Push the newline
+                token_vec_push(vec, token_get("\n", line, strlen(str) + col));
                 return;
             }
-            current_string[pos++] = *str++;
-            if (pos > 254) {
+
+            current_token[pos++] = *str++;
+
+            if (pos > MAX_TOKEN_SIZE - 1) {
                 fprintf(stderr,
-                        "error(%zu:%zu): Found a token more than 254 "
+                        "error(%zu:%zu): Found a token more than 255 "
                         "characters long\n",
-                        line + 1, col + 1);
+                        line, col);
                 exit(1);
             }
         }
-        if (strlen(current_string) > 0) {
-            token_vec_push(vec, token_get(current_string, line, col));
+
+        if (pos > 0) {
+            token_vec_push(vec, token_get(current_token, line, col));
         }
+
+        col += pos + 1;
+
         if (*str == '\n') {
-            token_vec_push(vec, token_get("\n", line, col));
+            // Col - 1 because IDK, works i guess
+            token_vec_push(vec, token_get("\n", line, col - 1));
+            return;
         }
-        memset(current_string, 0, 256);
-        pos = 0;
-        col = pos;
+
+        memset(current_token, 0, MAX_TOKEN_SIZE);
         str++;
     }
 }
 
 struct TokenVec *token_vec_new() {
     struct TokenVec *vec = calloc(1, sizeof(struct TokenVec));
+    if (vec == NULL) {
+        fprintf(stderr, "Failed to allocate memory");
+        exit(1);
+    }
     vec->elements = calloc(1, sizeof(struct Token));
+    if (vec->elements == NULL) {
+        fprintf(stderr, "Failed to allocate memory");
+        exit(1);
+    }
     vec->len = 0;
     vec->capacity = 1;
     return vec;
@@ -329,6 +349,10 @@ void token_vec_push(struct TokenVec *vec, struct Token token) {
     if (vec->len == vec->capacity) {
         vec->elements =
             realloc(vec->elements, vec->capacity * 2 * sizeof(struct Token));
+        if (vec->elements == NULL) {
+            fprintf(stderr, "Failed to reallocate memory");
+            exit(1);
+        }
         vec->capacity *= 2;
     }
 
@@ -343,7 +367,7 @@ void token_vec_destroy(struct TokenVec *vec) {
 void token_vec_print(struct TokenVec *vec) {
     printf("struct TokenVec {\n");
     for (size_t i = 0; i < vec->len; i++) {
-        char token[256] = {0};
+        char token[MAX_TOKEN_SIZE] = {0};
         token_to_string(&vec->elements[i], token);
         printf("  %s\n", token);
     }
