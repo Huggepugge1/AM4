@@ -1,0 +1,8 @@
+i := 0;
+while i <= 10 do
+    i := i + 1;
+
+if i = 10 then
+    y := i * i - 5
+else
+    skip
