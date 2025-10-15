@@ -45,6 +45,9 @@ struct InstructionVec {
     struct Instruction *elements;
 };
 
+/**
+ * The Label owns the ident
+ */
 struct Label {
     char *ident;
     int32_t addr;
@@ -56,6 +59,9 @@ struct LabelMap {
     struct Label *elements;
 };
 
+/**
+ * The Ident owns the ident
+ */
 struct Ident {
     char *ident;
     int32_t addr;
