@@ -13,12 +13,12 @@ struct BinaryFile *read_binary_file(char *filename) {
 
     struct BinaryFile *file = calloc(1, sizeof(struct BinaryFile));
 
-    fread(&file->instruction_start, sizeof(uint32_t), 1, fptr);
+    fread(&file->start_addr, sizeof(uint32_t), 1, fptr);
 
-    fread(&file->instruction_len, sizeof(uint32_t), 1, fptr);
+    fread(&file->total_size, sizeof(uint32_t), 1, fptr);
 
-    file->instructions = calloc(file->instruction_len, sizeof(uint32_t));
-    fread(file->instructions, sizeof(uint32_t), file->instruction_len, fptr);
+    file->memory = calloc(file->total_size, sizeof(uint32_t));
+    fread(file->memory, sizeof(uint32_t), file->total_size, fptr);
 
     fclose(fptr);
 
@@ -26,6 +26,6 @@ struct BinaryFile *read_binary_file(char *filename) {
 }
 
 void free_binary_file(struct BinaryFile *bin) {
-    free(bin->instructions);
+    free(bin->memory);
     free(bin);
 }
