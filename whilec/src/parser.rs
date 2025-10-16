@@ -7,6 +7,16 @@ pub enum ArithmeticOp {
     Mul,
 }
 
+impl std::fmt::Display for ArithmeticOp {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ArithmeticOp::Add => writeln!(f, "add"),
+            ArithmeticOp::Sub => writeln!(f, "sub"),
+            ArithmeticOp::Mul => writeln!(f, "mul"),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum Arithmetic {
     Int(i32),
@@ -16,13 +26,38 @@ pub enum Arithmetic {
         op: ArithmeticOp,
         rhs: Box<Arithmetic>,
     },
+    Paren(Box<Arithmetic>),
 }
 
 #[derive(Debug, Clone)]
 pub enum BooleanOp {
     Eq,
+    Lt,
     LEq,
+    Gt,
+    GEq,
+
+    And,
+    Or,
+
     Not,
+}
+
+impl std::fmt::Display for BooleanOp {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            BooleanOp::Eq => write!(f, "eq"),
+            BooleanOp::Lt => write!(f, "lt"),
+            BooleanOp::LEq => write!(f, "le"),
+            BooleanOp::Gt => write!(f, "gt"),
+            BooleanOp::GEq => write!(f, "ge"),
+
+            BooleanOp::And => write!(f, "land"),
+            BooleanOp::Or => write!(f, "lor"),
+
+            BooleanOp::Not => write!(f, "lnot"),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -30,10 +65,16 @@ pub enum Boolean {
     False,
     True,
     Binary {
+        lhs: Box<Boolean>,
+        op: BooleanOp,
+        rhs: Box<Boolean>,
+    },
+    Cmp {
         lhs: Box<Arithmetic>,
         op: BooleanOp,
         rhs: Box<Arithmetic>,
     },
+    Paren(Box<Boolean>),
 }
 
 #[derive(Debug, Clone)]
@@ -53,6 +94,7 @@ pub enum Statement {
         condition: Boolean,
         body: Box<Statement>,
     },
+    Paren(Box<Statement>),
 }
 
 pub struct Parser {
@@ -80,47 +122,54 @@ impl Parser {
         }
     }
 
-    pub fn parse(&mut self) -> Statement {
-        let mut statement = None;
-        while self.index < self.tokens.len() {
-            statement = Some(self.parse_statement(statement.clone()));
-        }
-        if let Some(statement) = statement {
-            statement
-        } else {
-            panic!("empty program!");
-        }
-    }
-
-    fn parse_statement(&mut self, lhs: Option<Statement>) -> Statement {
+    fn parse_statement_component(&mut self) -> Statement {
         let token = self.next().expect("unexpected end of file");
-        if token != Token::SemiColon && lhs.is_some() {
-            panic!("expected `;`, found `{token:?}`");
-        }
         match token {
-            Token::Skip => Statement::Skip,
-            Token::SemiColon => {
-                if let Some(lhs) = lhs {
-                    match lhs {
-                        Statement::Composision(statement1, statement2) => Statement::Composision(
-                            statement1,
-                            Box::new(Statement::Composision(
-                                statement2,
-                                Box::new(self.parse_statement(None)),
-                            )),
-                        ),
-                        lhs => Statement::Composision(
-                            Box::new(lhs),
-                            Box::new(self.parse_statement(None)),
-                        ),
-                    }
-                } else {
-                    panic!("No left hand side of composision");
-                }
+            Token::OpenParen => {
+                let statement = self.parse_statement();
+                self.expect(Token::CloseParen);
+                Statement::Paren(Box::new(statement))
             }
+            Token::Skip => Statement::Skip,
             Token::If => self.parse_if(),
             Token::While => self.parse_while(),
             Token::Ident(ident) => self.parse_assignment(ident),
+            t => panic!("unexpected token {t:?}"),
+        }
+    }
+
+    pub fn parse_statement(&mut self) -> Statement {
+        let mut lhs = self.parse_statement_component();
+
+        while let Some(token) = self.peek() {
+            if token == Token::SemiColon {
+                self.next();
+                lhs = match lhs {
+                    Statement::Composision(statement1, statement2) => Statement::Composision(
+                        statement1,
+                        Box::new(Statement::Composision(
+                            statement2,
+                            Box::new(self.parse_statement()),
+                        )),
+                    ),
+                    lhs => Statement::Composision(
+                        Box::new(lhs),
+                        Box::new(self.parse_statement_component()),
+                    ),
+                };
+            } else {
+                break;
+            }
+        }
+
+        lhs
+    }
+    fn parse_arithmetic_component(&mut self) -> Arithmetic {
+        let token = self.next().expect("unexpected end of file");
+        match token {
+            Token::Int(int) => Arithmetic::Int(int),
+            Token::Ident(ident) => Arithmetic::Ident(ident),
+            Token::OpenParen => Arithmetic::Paren(Box::new(self.parse_arithmetic())),
             t => panic!("unexpected token {t:?}"),
         }
     }
@@ -160,38 +209,26 @@ impl Parser {
         lhs
     }
 
-    fn parse_arithmetic_component(&mut self) -> Arithmetic {
+    fn parse_boolean_component(&mut self) -> Boolean {
         let token = self.next().expect("unexpected end of file");
-        match token {
+        let lhs = match token {
+            Token::OpenParen => {
+                let boolean = self.parse_boolean();
+                self.expect(Token::CloseParen);
+                return Boolean::Paren(Box::new(boolean));
+            }
+            Token::False => return Boolean::False,
+            Token::True => return Boolean::True,
             Token::Int(int) => Arithmetic::Int(int),
             Token::Ident(ident) => Arithmetic::Ident(ident),
             t => panic!("unexpected token {t:?}"),
-        }
-    }
-
-    fn parse_boolean(&mut self) -> Boolean {
-        let lhs = match self.peek().expect("unexpected end of file") {
-            Token::False => {
-                self.next();
-                return Boolean::False;
-            }
-            Token::True => {
-                self.next();
-                return Boolean::True;
-            }
-            Token::Not => {
-                self.next();
-                return self.parse_boolean();
-            }
-            _ => self.parse_arithmetic(),
         };
-
-        let token = self.next().expect("unexpected end of file");
-        match token {
-            Token::Eq | Token::LEq => {
-                let op = self.get_boolean_operator(token);
+        match self.peek().expect("unexpected end of file") {
+            Token::Eq | Token::Lt | Token::LEq | Token::Gt | Token::GEq => {
+                let operator_token = self.next().expect("unexpected end of file");
+                let op = self.get_boolean_operator(operator_token);
                 let rhs = self.parse_arithmetic();
-                Boolean::Binary {
+                Boolean::Cmp {
                     lhs: Box::new(lhs),
                     op,
                     rhs: Box::new(rhs),
@@ -199,6 +236,41 @@ impl Parser {
             }
             t => panic!("unexpected token {t:?}"),
         }
+    }
+
+    fn parse_boolean(&mut self) -> Boolean {
+        let mut lhs = self.parse_boolean_component();
+        while let Some(token) = self.peek() {
+            match token {
+                Token::And | Token::Or => {
+                    let operator_token = self.next().expect("unexpected end of file");
+                    let op = self.get_boolean_operator(operator_token);
+                    let rhs = self.parse_boolean_component();
+                    lhs = match rhs {
+                        Boolean::Binary {
+                            lhs: rhs_lhs,
+                            op: rhs_op,
+                            rhs: rhs_rhs,
+                        } => Boolean::Binary {
+                            lhs: Box::new(Boolean::Binary {
+                                lhs: Box::new(lhs),
+                                op,
+                                rhs: rhs_lhs,
+                            }),
+                            op: rhs_op,
+                            rhs: rhs_rhs,
+                        },
+                        rhs => Boolean::Binary {
+                            lhs: Box::new(lhs),
+                            op,
+                            rhs: Box::new(rhs),
+                        },
+                    };
+                }
+                _ => return lhs,
+            }
+        }
+        lhs
     }
 
     fn parse_assignment(&mut self, ident: String) -> Statement {
@@ -211,9 +283,9 @@ impl Parser {
     fn parse_if(&mut self) -> Statement {
         let condition = self.parse_boolean();
         self.expect(Token::Then);
-        let if_branch = Box::new(self.parse_statement(None));
+        let if_branch = Box::new(self.parse_statement_component());
         self.expect(Token::Else);
-        let else_branch = Box::new(self.parse_statement(None));
+        let else_branch = Box::new(self.parse_statement_component());
 
         Statement::If {
             condition,
@@ -225,7 +297,7 @@ impl Parser {
     fn parse_while(&mut self) -> Statement {
         let condition = self.parse_boolean();
         self.expect(Token::Do);
-        let body = Box::new(self.parse_statement(None));
+        let body = Box::new(self.parse_statement_component());
 
         Statement::While { condition, body }
     }
@@ -242,7 +314,14 @@ impl Parser {
     fn get_boolean_operator(&self, token: Token) -> BooleanOp {
         match token {
             Token::Eq => BooleanOp::Eq,
+            Token::Lt => BooleanOp::Lt,
             Token::LEq => BooleanOp::LEq,
+            Token::Gt => BooleanOp::Gt,
+            Token::GEq => BooleanOp::GEq,
+
+            Token::And => BooleanOp::And,
+            Token::Or => BooleanOp::Or,
+
             Token::Not => BooleanOp::Not,
             t => panic!("unexpected token {t:?}"),
         }

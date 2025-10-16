@@ -13,6 +13,11 @@ pub enum Token {
     #[token("*")]
     Mul,
 
+    #[token("(")]
+    OpenParen,
+    #[token(")")]
+    CloseParen,
+
     #[token("false")]
     False,
     #[token("true")]
@@ -20,12 +25,21 @@ pub enum Token {
 
     #[token("=")]
     Eq,
+    #[token("<")]
+    Lt,
     #[token("<=")]
     LEq,
-    #[token("!")]
-    Not,
+    #[token(">")]
+    Gt,
+    #[token(">=")]
+    GEq,
+
     #[token("&")]
     And,
+    #[token("|")]
+    Or,
+    #[token("!")]
+    Not,
 
     #[token(":=")]
     Assign,
