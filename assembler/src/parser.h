@@ -30,6 +30,9 @@ enum InstructionKind {
     InstructionFetch = 0xc0,
     InstructionStore = 0xc1,
 
+    InstructionPrintC = 0xd0,
+    InstructionPrintV = 0xd1,
+
     InstructionLabel,
     InstructionIdent,
 };

@@ -247,6 +247,52 @@ void parse_instruction(struct TokenVec *tokens, struct LabelMap *labels,
         }
     }
 
+    if (token.kind == TokenPrintC) {
+        struct Token value = next_token(tokens, i);
+        if (expect(TokenInt, &value) || expect(TokenBool, &value)) {
+            struct Token newline = next_token(tokens, i);
+            if (expect(TokenNewLine, &newline)) {
+                instruction->kind = InstructionPrintC;
+                instruction->value = value.value;
+                return;
+            } else {
+                fprintf(stderr,
+                        "error(%zu:%zu): `printc <int/bool>` not followed by a "
+                        "newline\n",
+                        newline.line, newline.col);
+                exit(1);
+            }
+        } else {
+            fprintf(stderr,
+                    "error(%zu:%zu): `printc` not followed by a "
+                    "int or a bool\n",
+                    value.line, value.col);
+            exit(1);
+        }
+    }
+    if (token.kind == TokenPrintV) {
+        struct Token ident = next_token(tokens, i);
+        if (expect(TokenIdent, &ident)) {
+            struct Token newline = next_token(tokens, i);
+            if (expect(TokenNewLine, &newline)) {
+                instruction->kind = InstructionPrintV;
+                instruction->value = ident.value;
+                return;
+            } else {
+                fprintf(
+                    stderr,
+                    "error(%zu:%zu): `printv %s` not followed by a newline\n",
+                    newline.line, newline.col, instruction->value.value.string);
+                exit(1);
+            }
+        } else {
+            fprintf(stderr,
+                    "error(%zu:%zu): `printv` not followed by an identifier\n",
+                    ident.line, ident.col);
+            exit(1);
+        }
+    }
+
     if (token.kind == TokenLabel) {
         struct Token newline = next_token(tokens, i);
         if (expect(TokenNewLine, &newline)) {
@@ -367,6 +413,13 @@ void instruction_kind_to_string(struct Instruction *instruction,
         return;
     case InstructionStore:
         *str = "store";
+        return;
+
+    case InstructionPrintC:
+        *str = "printc";
+        return;
+    case InstructionPrintV:
+        *str = "printv";
         return;
 
     case InstructionLabel:
