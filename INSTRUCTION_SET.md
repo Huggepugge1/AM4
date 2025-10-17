@@ -69,3 +69,9 @@ Instruction address. 24 bit number.
 
 ### Store
 0xc1 | VA
+
+### Print constant
+0xd0 | C
+
+### Print variable
+0xd1 | VA
