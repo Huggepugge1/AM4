@@ -30,6 +30,9 @@ enum TokenKind {
     TokenFetch,
     TokenStore,
 
+    TokenPrintC,
+    TokenPrintV,
+
     TokenLabel,
     TokenIdent,
 
