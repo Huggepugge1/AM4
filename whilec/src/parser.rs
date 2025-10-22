@@ -95,6 +95,7 @@ pub enum Statement {
         body: Box<Statement>,
     },
     Paren(Box<Statement>),
+    Print(Arithmetic),
 }
 
 pub struct Parser {
@@ -134,6 +135,7 @@ impl Parser {
             Token::If => self.parse_if(),
             Token::While => self.parse_while(),
             Token::Ident(ident) => self.parse_assignment(ident),
+            Token::Print => self.parse_print(),
             t => panic!("unexpected token {t:?}"),
         }
     }
@@ -325,5 +327,17 @@ impl Parser {
             Token::Not => BooleanOp::Not,
             t => panic!("unexpected token {t:?}"),
         }
+    }
+
+    fn parse_print(&mut self) -> Statement {
+        let arithmetic = self.parse_arithmetic();
+        match arithmetic {
+            Arithmetic::Binary { .. } => {
+                panic!("Only a Int or a Ident allowed after print")
+            }
+            Arithmetic::Paren(..) => panic!("Only a Int or a Ident allowed after print"),
+            _ => (),
+        }
+        Statement::Print(arithmetic)
     }
 }

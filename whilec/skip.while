@@ -1,1 +1,4 @@
-skip
+if false then
+	x := 0
+else
+	skip

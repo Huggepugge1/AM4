@@ -1,5 +1,6 @@
 use crate::parser::{Arithmetic, Boolean, Statement};
 
+#[derive(Clone)]
 pub struct CodeGenerator {
     pub output_string: String,
     pub label: usize,
@@ -30,6 +31,12 @@ impl CodeGenerator {
             } => self.code_gen_if(condition, *if_branch, *else_branch),
             Statement::While { condition, body } => self.code_gen_while(condition, *body),
             Statement::Paren(statement) => self.code_gen(*statement),
+            Statement::Print(arithmetic) => match arithmetic {
+                Arithmetic::Int(int) => self.output_string += &format!("    printc {int}"),
+                Arithmetic::Ident(ident) => self.output_string += &format!("    printv {ident}"),
+                Arithmetic::Binary { .. } => unreachable!(),
+                Arithmetic::Paren(_) => unreachable!(),
+            },
         }
     }
 
@@ -48,8 +55,8 @@ impl CodeGenerator {
 
     fn code_gen_boolean(&mut self, ast: Boolean) {
         match ast {
-            Boolean::False => self.output_string += "false",
-            Boolean::True => self.output_string += "true",
+            Boolean::False => self.output_string += "    push false\n",
+            Boolean::True => self.output_string += "    push true\n",
             Boolean::Cmp { lhs, op, rhs } => {
                 self.code_gen_arithmetic(*lhs);
                 self.code_gen_arithmetic(*rhs);

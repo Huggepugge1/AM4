@@ -60,6 +60,8 @@ pub enum Token {
     While,
     #[token("do")]
     Do,
+    #[token("print")]
+    Print,
 
     #[regex(r"[A-Za-z][0-9A-Za-z]*", |ident| ident.slice().to_string())]
     Ident(String),
