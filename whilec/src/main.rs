@@ -24,7 +24,6 @@ fn main() {
         label: 1,
     };
     code_generator.code_gen(ast);
-    code_generator.output_string += "    fetch x\n";
     let mut file = std::fs::File::create("out.asm").unwrap();
     file.write_all(code_generator.output_string.as_bytes())
         .unwrap();

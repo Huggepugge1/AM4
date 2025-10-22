@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define STACK_SIZE 256
+#define STACK_SIZE 1024
 #define ARG_MASK 0xffffff
 #define SIGN_BIT 0x800000
 #define SIGN_EXTEND 0xff000000
@@ -30,7 +30,7 @@ int32_t pop(struct Stack *stack) {
     return stack->stack[stack->sp];
 }
 
-int32_t run_vm(struct BinaryFile *bin) {
+void run_vm(struct BinaryFile *bin) {
     struct Stack stack = {.sp = 0};
 
     uint32_t pc = bin->start_addr;
@@ -102,10 +102,13 @@ int32_t run_vm(struct BinaryFile *bin) {
         } else if (opcode == InstructionStore) {
             int32_t value = pop(&stack);
             bin->memory[op_arg] = value;
+        } else if (opcode == InstructionPrintC) {
+            printf("%d\n", op_arg);
+        } else if (opcode == InstructionPrintV) {
+            printf("%d\n", bin->memory[op_arg]);
         } else {
             fprintf(stderr, "Unknown operation %02x\n", opcode);
             exit(1);
         }
     }
-    return pop(&stack);
 }

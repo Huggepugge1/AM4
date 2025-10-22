@@ -32,8 +32,8 @@ impl CodeGenerator {
             Statement::While { condition, body } => self.code_gen_while(condition, *body),
             Statement::Paren(statement) => self.code_gen(*statement),
             Statement::Print(arithmetic) => match arithmetic {
-                Arithmetic::Int(int) => self.output_string += &format!("    printc {int}"),
-                Arithmetic::Ident(ident) => self.output_string += &format!("    printv {ident}"),
+                Arithmetic::Int(int) => self.output_string += &format!("    printc {int}\n"),
+                Arithmetic::Ident(ident) => self.output_string += &format!("    printv {ident}\n"),
                 Arithmetic::Binary { .. } => unreachable!(),
                 Arithmetic::Paren(_) => unreachable!(),
             },

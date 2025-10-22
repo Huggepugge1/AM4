@@ -9,4 +9,7 @@ while i <= 0 | i < 10 do
 if i = 10 then
     (x := i * i - 5; y := i + 2; x := y)
 else
-    skip
+    skip;
+
+print 5;
+print x

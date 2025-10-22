@@ -61,7 +61,8 @@ int32_t get_value_as_int(struct Instruction *instruction,
         return instruction->value.value.boolean;
     case StringValue:
         if (instruction->kind == InstructionFetch ||
-            instruction->kind == InstructionStore) {
+            instruction->kind == InstructionStore ||
+            instruction->kind == InstructionPrintV) {
             int32_t value =
                 ident_map_get(idents, instruction->value.value.string);
             if (value == -1) {

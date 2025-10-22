@@ -58,4 +58,5 @@
 5:
     noop
 6:
-    fetch x
+    printc 5
+    printv x

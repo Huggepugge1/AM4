@@ -1,7 +1,7 @@
 #pragma once
 
-#include <stdint.h>
 #include "binary.h"
+#include <stdint.h>
 
 enum InstructionKind {
     InstructionNoop = 0x00,
@@ -27,6 +27,9 @@ enum InstructionKind {
 
     InstructionFetch = 0xc0,
     InstructionStore = 0xc1,
+
+    InstructionPrintC = 0xd0,
+    InstructionPrintV = 0xd1,
 };
 
-int32_t run_vm(struct BinaryFile *bin);
+void run_vm(struct BinaryFile *bin);

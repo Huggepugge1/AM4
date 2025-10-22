@@ -112,6 +112,14 @@ struct Token token_get(const char *str, size_t line, size_t col) {
         token.kind = TokenStore;
         return token;
     }
+    if (strcmp(str, "printc") == 0) {
+        token.kind = TokenPrintC;
+        return token;
+    }
+    if (strcmp(str, "printv") == 0) {
+        token.kind = TokenPrintV;
+        return token;
+    }
 
     if (str[strlen(str) - 1] == ':') {
         token.kind = TokenLabel;
@@ -226,6 +234,13 @@ void token_kind_to_string(struct Token *token,
         *str = "store";
         return;
 
+    case TokenPrintC:
+        *str = "printc";
+        return;
+    case TokenPrintV:
+        *str = "printv";
+        return;
+
     case TokenLabel:
         *str = "label";
         return;
@@ -269,7 +284,7 @@ struct TokenVec *lex(char *filename) {
 
     char *line = NULL;
     size_t len = 0;
-    ssize_t chars_read;
+    size_t chars_read;
 
     // One-indexed
     size_t line_num = 1;
