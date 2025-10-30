@@ -1,0 +1,22 @@
+x := 1;
+print x;
+
+begin
+    var x := 10;
+    var y := 20;
+    print x;
+    print y;
+
+    begin
+        var x := 100;
+        var z := 300;
+        print x;
+        print y;
+        print z
+    end;
+
+    print x;
+    print y
+end;
+
+print x

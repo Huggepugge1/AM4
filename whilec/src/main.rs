@@ -22,6 +22,8 @@ fn main() {
     let mut code_generator = code_gen::CodeGenerator {
         output_string: String::from("0:\n"),
         label: 1,
+        scopes: Vec::new(),
+        var_counter: 0,
     };
     code_generator.code_gen(ast);
     let mut file = std::fs::File::create("out.asm").unwrap();

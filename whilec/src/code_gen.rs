@@ -1,9 +1,13 @@
-use crate::parser::{Arithmetic, Boolean, Statement};
+use std::collections::HashMap;
+
+use crate::parser::{Arithmetic, Boolean, Declaration, Statement};
 
 #[derive(Clone)]
 pub struct CodeGenerator {
     pub output_string: String,
     pub label: usize,
+    pub scopes: Vec<HashMap<String, String>>,
+    pub var_counter: usize,
 }
 
 impl CodeGenerator {
@@ -16,11 +20,12 @@ impl CodeGenerator {
     pub fn code_gen(&mut self, ast: Statement) {
         match ast {
             Statement::Assignment { ident, value } => {
+                let resolved = self.resolve_var(&ident);
                 self.code_gen_arithmetic(value.clone());
-                self.output_string += &format!("    store {ident}\n");
+                self.output_string += &format!("    store {resolved}\n");
             }
             Statement::Skip => self.output_string += "    noop\n",
-            Statement::Composision(statement, statement1) => {
+            Statement::Composition(statement, statement1) => {
                 self.code_gen(*statement);
                 self.code_gen(*statement1);
             }
@@ -33,10 +38,14 @@ impl CodeGenerator {
             Statement::Paren(statement) => self.code_gen(*statement),
             Statement::Print(arithmetic) => match arithmetic {
                 Arithmetic::Int(int) => self.output_string += &format!("    printc {int}\n"),
-                Arithmetic::Ident(ident) => self.output_string += &format!("    printv {ident}\n"),
+                Arithmetic::Ident(ident) => {
+                    let resolved = self.resolve_var(&ident);
+                    self.output_string += &format!("    printv {resolved}\n");
+                }
                 Arithmetic::Binary { .. } => unreachable!(),
                 Arithmetic::Paren(_) => unreachable!(),
             },
+            Statement::Block { declarations, body } => self.code_gen_block(declarations, *body),
         }
     }
 
@@ -92,5 +101,40 @@ impl CodeGenerator {
         self.code_gen(body);
         self.output_string += &format!("    jmp {condition_label}\n");
         self.output_string += &format!("{end_label}\n");
+    }
+
+    fn code_gen_block(&mut self, declarations: Vec<Declaration>, body: Statement) {
+        self.scopes.push(HashMap::new());
+
+        for decl in declarations {
+            let Declaration::Variable { ident, value } = decl;
+            let unique_name = self.declare_var(&ident);
+            self.code_gen_arithmetic(value);
+            self.output_string += &format!("    store {unique_name}\n")
+        }
+
+        self.code_gen(body);
+
+        self.scopes.pop();
+    }
+
+    fn declare_var(&mut self, name: &str) -> String {
+        self.var_counter += 1;
+        let unique_name = format!("{}_{name}", self.var_counter);
+        self.scopes
+            .last_mut()
+            .unwrap()
+            .insert(name.to_string(), unique_name.clone());
+        unique_name
+    }
+
+    fn resolve_var(&mut self, name: &str) -> String {
+        for scope in self.scopes.iter().rev() {
+            if let Some(unique_name) = scope.get(name) {
+                return unique_name.clone();
+            }
+        }
+
+        name.to_string()
     }
 }

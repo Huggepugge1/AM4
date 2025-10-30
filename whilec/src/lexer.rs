@@ -43,6 +43,8 @@ pub enum Token {
 
     #[token(":=")]
     Assign,
+    #[token("var")]
+    Var,
 
     #[token("skip")]
     Skip,
@@ -62,6 +64,11 @@ pub enum Token {
     Do,
     #[token("print")]
     Print,
+
+    #[token("begin")]
+    Begin,
+    #[token("end")]
+    End,
 
     #[regex(r"[A-Za-z][0-9A-Za-z]*", |ident| ident.slice().to_string())]
     Ident(String),
