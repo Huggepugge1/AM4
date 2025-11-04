@@ -1,0 +1,7 @@
+x := 1;
+begin
+    var x := 0;
+    x := x + 5;
+    print x
+end;
+print x

@@ -78,13 +78,18 @@ pub enum Boolean {
 }
 
 #[derive(Debug, Clone)]
+pub enum Declaration {
+    Variable { ident: String, value: Arithmetic },
+}
+
+#[derive(Debug, Clone)]
 pub enum Statement {
     Assignment {
         ident: String,
         value: Arithmetic,
     },
     Skip,
-    Composision(Box<Statement>, Box<Statement>),
+    Composition(Box<Statement>, Box<Statement>),
     If {
         condition: Boolean,
         if_branch: Box<Statement>,
@@ -96,6 +101,10 @@ pub enum Statement {
     },
     Paren(Box<Statement>),
     Print(Arithmetic),
+    Block {
+        declarations: Vec<Declaration>,
+        body: Box<Statement>,
+    },
 }
 
 pub struct Parser {
@@ -136,6 +145,7 @@ impl Parser {
             Token::While => self.parse_while(),
             Token::Ident(ident) => self.parse_assignment(ident),
             Token::Print => self.parse_print(),
+            Token::Begin => self.parse_block(),
             t => panic!("unexpected token {t:?}"),
         }
     }
@@ -147,14 +157,14 @@ impl Parser {
             if token == Token::SemiColon {
                 self.next();
                 lhs = match lhs {
-                    Statement::Composision(statement1, statement2) => Statement::Composision(
+                    Statement::Composition(statement1, statement2) => Statement::Composition(
                         statement1,
-                        Box::new(Statement::Composision(
+                        Box::new(Statement::Composition(
                             statement2,
                             Box::new(self.parse_statement()),
                         )),
                     ),
-                    lhs => Statement::Composision(
+                    lhs => Statement::Composition(
                         Box::new(lhs),
                         Box::new(self.parse_statement_component()),
                     ),
@@ -166,6 +176,7 @@ impl Parser {
 
         lhs
     }
+
     fn parse_arithmetic_component(&mut self) -> Arithmetic {
         let token = self.next().expect("unexpected end of file");
         match token {
@@ -339,5 +350,40 @@ impl Parser {
             _ => (),
         }
         Statement::Print(arithmetic)
+    }
+
+    fn parse_block(&mut self) -> Statement {
+        let mut declarations = Vec::new();
+
+        while let Some(token) = self.peek() {
+            match token {
+                Token::Var => {
+                    self.next();
+                    declarations.push(self.parse_declaration());
+                    self.expect(Token::SemiColon);
+                }
+                _ => break,
+            }
+        }
+
+        let body = self.parse_statement();
+
+        self.expect(Token::End);
+
+        Statement::Block {
+            declarations,
+            body: Box::new(body),
+        }
+    }
+
+    fn parse_declaration(&mut self) -> Declaration {
+        let ident = match self.next() {
+            Some(Token::Ident(name)) => name,
+            t => panic!("unexpected token {t:?}"),
+        };
+        self.expect(Token::Assign);
+        let value = self.parse_arithmetic();
+
+        Declaration::Variable { ident, value }
     }
 }
